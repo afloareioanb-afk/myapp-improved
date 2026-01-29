@@ -190,6 +190,46 @@
                 <input id="app_type_other" name="app_type_other" type="text" placeholder="Specify other language" autocomplete="off" />
               </div>
             </div>
+            <div class="field">
+              <label>Database</label>
+              <div class="segmented" id="database_segmented">
+                <button type="button" data-db="spanner">Spanner</button>
+                <button type="button" data-db="cloudsql">CloudSQL(Postgres, SQLServer)</button>
+                <button type="button" data-db="oracle">Oracle</button>
+                <button type="button" data-db="sqlserver">SQLServer</button>
+                <button type="button" data-db="bigquery">BigQuery</button>
+                <button type="button" data-db="postgresql">PostgreSQL</button>
+                <button type="button" data-db="mongodb">MongoDB</button>
+                <button type="button" data-db="redis">Redis</button>
+                <button type="button" data-db="other">Other</button>
+              </div>
+              <div class="field" id="database_other_wrap" style="display:none;margin-top:8px;">
+                <input id="database_other" name="database_other" type="text" placeholder="Specify other database" autocomplete="off" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Messaging</label>
+              <div class="segmented" id="messaging_segmented">
+                <button type="button" data-msg="ibmmq">IBM MQ</button>
+                <button type="button" data-msg="kafka">Kafka</button>
+                <button type="button" data-msg="other">Other</button>
+              </div>
+              <div class="field" id="messaging_other_wrap" style="display:none;margin-top:8px;">
+                <input id="messaging_other" name="messaging_other" type="text" placeholder="Specify other messaging" autocomplete="off" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Batch</label>
+              <div class="segmented" id="batch_segmented">
+                <button type="button" data-batch="automic">Automic/UC4</button>
+                <button type="button" data-batch="controlm">Control-M</button>
+                <button type="button" data-batch="gcpbatch">GCP Batch</button>
+                <button type="button" data-batch="other">Other</button>
+              </div>
+              <div class="field" id="batch_other_wrap" style="display:none;margin-top:8px;">
+                <input id="batch_other" name="batch_other" type="text" placeholder="Specify other batch" autocomplete="off" />
+              </div>
+            </div>
             <div class="field" id="role_other_wrap" style="display:none;margin-top:8px;">
               <input id="role_other" name="role_other" type="text" placeholder="Specify other role" autocomplete="off" />
             </div>

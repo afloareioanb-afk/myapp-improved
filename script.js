@@ -54,7 +54,7 @@ if (typeof URLSearchParams === 'undefined') {
 
 
 // New schema keys
-const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "nar_id", "contact_email", "role_other"];
+const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "database", "database_other", "messaging", "messaging_other", "batch", "batch_other", "nar_id", "contact_email", "role_other"];
 const YESNO_KEYS = [
   // SLO/SLA
   "slo_exists", "slo_pdm",
@@ -197,6 +197,12 @@ function getState() {
   state.application_type_extra = params.get('application_type_extra') || '';
   state.app_type = params.get('app_type') || '';
   state.app_type_other = params.get('app_type_other') || '';
+  state.database = params.get('database') || '';
+  state.database_other = params.get('database_other') || '';
+  state.messaging = params.get('messaging') || '';
+  state.messaging_other = params.get('messaging_other') || '';
+  state.batch = params.get('batch') || '';
+  state.batch_other = params.get('batch_other') || '';
   state.other_mentions = params.get('other_mentions') || '';
   // Selected location
   state.loc_selected = params.get('loc_selected') || '';
@@ -532,6 +538,9 @@ Assessment Summary:
 - Contact Email: ${state.contact_email || 'Not specified'}
 - Application Type: ${state.application_type || 'Not specified'}${state.application_type_extra ? ' (' + state.application_type_extra + ')' : ''}
 - Language: ${state.app_type || 'Not specified'}${state.app_type === 'other' && state.app_type_other ? ' (' + state.app_type_other + ')' : ''}
+- Database: ${state.database || 'Not specified'}${state.database === 'other' && state.database_other ? ' (' + state.database_other + ')' : ''}
+- Messaging: ${state.messaging || 'Not specified'}${state.messaging === 'other' && state.messaging_other ? ' (' + state.messaging_other + ')' : ''}
+- Batch: ${state.batch || 'Not specified'}${state.batch === 'other' && state.batch_other ? ' (' + state.batch_other + ')' : ''}
 - Location: ${state.loc_selected || 'Not specified'}
 - Assessment Date: ${new Date().toLocaleDateString()}
 
@@ -584,6 +593,9 @@ function resetAll() {
   const contactEmailInput = document.getElementById('contact_email');
   const applicationTypeExtraInput = document.getElementById('application_type_extra');
   const appTypeOtherInput = document.getElementById('app_type_other');
+  const databaseOtherInput = document.getElementById('database_other');
+  const messagingOtherInput = document.getElementById('messaging_other');
+  const batchOtherInput = document.getElementById('batch_other');
   const otherMentionsTextarea = document.getElementById('other_mentions');
   
   if (appNameInput) appNameInput.value = '';
@@ -593,6 +605,9 @@ function resetAll() {
   if (contactEmailInput) contactEmailInput.value = '';
   if (applicationTypeExtraInput) applicationTypeExtraInput.value = '';
   if (appTypeOtherInput) appTypeOtherInput.value = '';
+  if (databaseOtherInput) databaseOtherInput.value = '';
+  if (messagingOtherInput) messagingOtherInput.value = '';
+  if (batchOtherInput) batchOtherInput.value = '';
   if (otherMentionsTextarea) otherMentionsTextarea.value = '';
   
   // Reset role other field visibility
@@ -617,6 +632,36 @@ function resetAll() {
     });
     const appTypeOtherWrap = document.getElementById('app_type_other_wrap');
     if (appTypeOtherWrap) appTypeOtherWrap.style.display = 'none';
+  }
+  
+  // Reset database selection
+  const dbSeg = document.getElementById('database_segmented');
+  if (dbSeg) {
+    dbSeg.querySelectorAll('button').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+    const dbOtherWrap = document.getElementById('database_other_wrap');
+    if (dbOtherWrap) dbOtherWrap.style.display = 'none';
+  }
+  
+  // Reset messaging selection
+  const msgSeg = document.getElementById('messaging_segmented');
+  if (msgSeg) {
+    msgSeg.querySelectorAll('button').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+    const msgOtherWrap = document.getElementById('messaging_other_wrap');
+    if (msgOtherWrap) msgOtherWrap.style.display = 'none';
+  }
+  
+  // Reset batch selection
+  const batchSeg = document.getElementById('batch_segmented');
+  if (batchSeg) {
+    batchSeg.querySelectorAll('button').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+    const batchOtherWrap = document.getElementById('batch_other_wrap');
+    if (batchOtherWrap) batchOtherWrap.style.display = 'none';
   }
   
   // Reset location selection
@@ -703,6 +748,18 @@ function convertToCSV(data) {
   rows.push(['Language', data.app_type || '']);
   if (data.app_type === 'other') {
     rows.push(['Language (Other)', data.app_type_other || '']);
+  }
+  rows.push(['Database', data.database || '']);
+  if (data.database === 'other') {
+    rows.push(['Database (Other)', data.database_other || '']);
+  }
+  rows.push(['Messaging', data.messaging || '']);
+  if (data.messaging === 'other') {
+    rows.push(['Messaging (Other)', data.messaging_other || '']);
+  }
+  rows.push(['Batch', data.batch || '']);
+  if (data.batch === 'other') {
+    rows.push(['Batch (Other)', data.batch_other || '']);
   }
   rows.push([]);
   
@@ -804,6 +861,12 @@ function collectAnswers() {
   data.application_type_extra = params.get('application_type_extra') || '';
   data.app_type = params.get('app_type') || '';
   data.app_type_other = params.get('app_type_other') || '';
+  data.database = params.get('database') || '';
+  data.database_other = params.get('database_other') || '';
+  data.messaging = params.get('messaging') || '';
+  data.messaging_other = params.get('messaging_other') || '';
+  data.batch = params.get('batch') || '';
+  data.batch_other = params.get('batch_other') || '';
   data.other_mentions = params.get('other_mentions') || '';
   // yes/no
   YESNO_KEYS.forEach(function(key) {
@@ -935,6 +998,39 @@ function render() {
     });
     const langOtherWrap = document.getElementById('app_type_other_wrap');
     if (langOtherWrap) langOtherWrap.style.display = state.app_type === 'other' ? '' : 'none';
+  }
+  // Hydrate database
+  const dbSeg = document.getElementById('database_segmented');
+  if (dbSeg) {
+    dbSeg.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-db') === state.database);
+    });
+    const dbOtherWrap = document.getElementById('database_other_wrap');
+    const dbOtherInput = document.getElementById('database_other');
+    if (dbOtherWrap) dbOtherWrap.style.display = state.database === 'other' ? '' : 'none';
+    if (dbOtherInput && dbOtherInput.value !== state.database_other) dbOtherInput.value = state.database_other || '';
+  }
+  // Hydrate messaging
+  const msgSeg = document.getElementById('messaging_segmented');
+  if (msgSeg) {
+    msgSeg.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-msg') === state.messaging);
+    });
+    const msgOtherWrap = document.getElementById('messaging_other_wrap');
+    const msgOtherInput = document.getElementById('messaging_other');
+    if (msgOtherWrap) msgOtherWrap.style.display = state.messaging === 'other' ? '' : 'none';
+    if (msgOtherInput && msgOtherInput.value !== state.messaging_other) msgOtherInput.value = state.messaging_other || '';
+  }
+  // Hydrate batch
+  const batchSeg = document.getElementById('batch_segmented');
+  if (batchSeg) {
+    batchSeg.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-batch') === state.batch);
+    });
+    const batchOtherWrap = document.getElementById('batch_other_wrap');
+    const batchOtherInput = document.getElementById('batch_other');
+    if (batchOtherWrap) batchOtherWrap.style.display = state.batch === 'other' ? '' : 'none';
+    if (batchOtherInput && batchOtherInput.value !== state.batch_other) batchOtherInput.value = state.batch_other || '';
   }
   var otherMentionsTextarea = document.getElementById('other_mentions');
   if (otherMentionsTextarea && otherMentionsTextarea.value !== state.other_mentions) otherMentionsTextarea.value = state.other_mentions || '';
@@ -1404,6 +1500,42 @@ window.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+  // build database inputs
+  const dbSeg = document.getElementById('database_segmented');
+  if (dbSeg) {
+    dbSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const selected = btn.getAttribute('data-db');
+        setAnswer('database', selected);
+        document.getElementById('database_other_wrap').style.display = selected === 'other' ? '' : 'none';
+        dbSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      });
+    });
+  }
+  // build messaging inputs
+  const msgSeg = document.getElementById('messaging_segmented');
+  if (msgSeg) {
+    msgSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const selected = btn.getAttribute('data-msg');
+        setAnswer('messaging', selected);
+        document.getElementById('messaging_other_wrap').style.display = selected === 'other' ? '' : 'none';
+        msgSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      });
+    });
+  }
+  // build batch inputs
+  const batchSeg = document.getElementById('batch_segmented');
+  if (batchSeg) {
+    batchSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const selected = btn.getAttribute('data-batch');
+        setAnswer('batch', selected);
+        document.getElementById('batch_other_wrap').style.display = selected === 'other' ? '' : 'none';
+        batchSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      });
+    });
+  }
   document.getElementById('app_name').addEventListener('input', function(e){ setAnswer('app_name', e.target.value); });
   document.getElementById('role').addEventListener('change', function(e){ 
     setAnswer('role', e.target.value);
@@ -1428,6 +1560,9 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   document.getElementById('application_type_extra').addEventListener('input', function(e){ setAnswer('application_type_extra', e.target.value); });
   document.getElementById('app_type_other').addEventListener('input', function(e){ setAnswer('app_type_other', e.target.value); });
+  document.getElementById('database_other').addEventListener('input', function(e){ setAnswer('database_other', e.target.value); });
+  document.getElementById('messaging_other').addEventListener('input', function(e){ setAnswer('messaging_other', e.target.value); });
+  document.getElementById('batch_other').addEventListener('input', function(e){ setAnswer('batch_other', e.target.value); });
   document.getElementById('other_mentions').addEventListener('input', function(e){ setAnswer('other_mentions', e.target.value); });
 
   // initial render builds everything
