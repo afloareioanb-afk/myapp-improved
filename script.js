@@ -1060,9 +1060,17 @@ function buildYesNoOptions() {
 
 function buildLocations() {
   const root = document.getElementById('locations-root');
-  root.innerHTML = '';
+  const tooltipEl = document.getElementById('location-tooltip');
   const selected = new URLSearchParams(location.search).get('loc_selected');
   const list = selected ? [selected] : [];
+  
+  // Clear everything except tooltip
+  Array.from(root.children).forEach(function(child) {
+    if (child.id !== 'location-tooltip') {
+      root.removeChild(child);
+    }
+  });
+  
   if (!list.length) {
     const hint = document.createElement('div');
     hint.className = 'hint';
@@ -1568,13 +1576,32 @@ window.addEventListener('DOMContentLoaded', function() {
   // initial render builds everything
   // location segmented
   const locSeg = document.getElementById('location_segmented');
-  locSeg.querySelectorAll('button').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      const val = btn.getAttribute('data-loc');
-      setAnswer('loc_selected', val);
-      // render() will rebuild and highlight
+  const tooltipEl = document.getElementById('location-tooltip');
+  
+  if (locSeg) {
+    locSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const val = btn.getAttribute('data-loc');
+        setAnswer('loc_selected', val);
+        // render() will rebuild and highlight
+      });
+      
+      // Add hover events for tooltips
+      btn.addEventListener('mouseenter', function(){
+        const tooltipText = btn.getAttribute('data-tooltip');
+        if (tooltipText && tooltipEl) {
+          tooltipEl.textContent = tooltipText;
+          tooltipEl.style.display = 'block';
+        }
+      });
+      
+      btn.addEventListener('mouseleave', function(){
+        if (tooltipEl) {
+          tooltipEl.style.display = 'none';
+        }
+      });
     });
-  });
+  }
 
   document.getElementById('submit').addEventListener('click', generateAndSendCSV);
   document.getElementById('reset').addEventListener('click', resetAll);

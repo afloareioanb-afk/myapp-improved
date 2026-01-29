@@ -240,12 +240,14 @@
           <div class="field">
             <label>Select one location</label>
             <div class="segmented" id="location_segmented">
-              <button type="button" data-loc="gcp" title="GKE,GCE,Cloud Run,Cloud Function">GCP</button>
-              <button type="button" data-loc="onprem" title="Fabric2/OpenShift,VHS, DAP,Mainframe,Other">On-Prem</button>
-              <button type="button" data-loc="hybrid" title="GKE,GCE,Cloud Run,Cloud Function + Fabric2/OpenShift,VHS, DAP,Mainframe,Other">Hybrid</button>
+              <button type="button" data-loc="gcp" data-tooltip="GKE,GCE,Cloud Run,Cloud Function">GCP</button>
+              <button type="button" data-loc="onprem" data-tooltip="Fabric2/OpenShift,VHS, DAP,Mainframe,Other">On-Prem</button>
+              <button type="button" data-loc="hybrid" data-tooltip="GKE,GCE,Cloud Run,Cloud Function + Fabric2/OpenShift,VHS, DAP,Mainframe,Other">Hybrid</button>
             </div>
           </div>
-          <div id="locations-root"></div>
+          <div id="locations-root">
+            <div id="location-tooltip" class="location-tooltip" style="display:none;"></div>
+          </div>
         </section>
 
         <section class="card" id="slo-sla">
