@@ -779,6 +779,47 @@ body:before {
   background: #4a8eff;
 }
 
+/* Custom tooltips for location buttons */
+.segmented button[data-loc] {
+  position: relative;
+}
+
+.segmented button[data-loc]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: rgba(15, 21, 51, 0.98);
+  border: 1px solid rgba(82,255,224,0.3);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  white-space: normal;
+  max-width: 300px;
+  text-align: center;
+  z-index: 10000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.segmented button[data-loc]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: rgba(82,255,224,0.3);
+  z-index: 10001;
+  pointer-events: none;
+}
+
 .question {
   margin: 16px 0;
 }

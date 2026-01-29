@@ -181,13 +181,13 @@
         </section>
 
         <section class="card" id="locations">
-          <h2><span class="icon">🌐</span> Location of application</h2>
+          <h2><span class="icon">🌐</span> Infrastructure/Application Hosting</h2>
           <div class="field">
             <label>Select one location</label>
             <div class="segmented" id="location_segmented">
-              <button type="button" data-loc="gcp">GCP</button>
-              <button type="button" data-loc="onprem">On-Prem</button>
-              <button type="button" data-loc="hybrid">Hybrid</button>
+              <button type="button" data-loc="gcp" title="GKE,GCE,Cloud Run,Cloud Function">GCP</button>
+              <button type="button" data-loc="onprem" title="Fabric2/OpenShift,VHS, DAP,Mainframe,Other">On-Prem</button>
+              <button type="button" data-loc="hybrid" title="GKE,GCE,Cloud Run,Cloud Function + Fabric2/OpenShift,VHS, DAP,Mainframe,Other">Hybrid</button>
             </div>
           </div>
           <div id="locations-root"></div>
