@@ -392,8 +392,20 @@
             <div class="question"><label>Wouldn't the error budget always be 100% - SLO target % (e.g., 5% if SLO target is 95%)?</label><div class="options" data-key="slo_error_budget_calc"></div></div>
           </div>
           <div class="question"><label>Is there a documented PDM for your application?</label><div class="options" data-key="slo_pdm"></div></div>
-          <div class="question"><label>Do you have critical user journeys documented?</label><div class="options" data-key="slo_cujs"></div></div>
-          <div class="question"><label>Do you have a high-level architecture documented?</label><div class="options" data-key="slo_hla"></div></div>
+          <div class="question">
+            <label>Do you have critical user journeys documented?</label>
+            <div class="options" data-key="slo_cujs"></div>
+            <div class="field" id="slo_cujs_link_wrap" style="display:none;margin-top:8px;">
+              <input id="slo_cujs_link" name="slo_cujs_link" type="text" placeholder="Link to critical user journeys documentation (URL)" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Do you have a high-level architecture documented?</label>
+            <div class="options" data-key="slo_hla"></div>
+            <div class="field" id="slo_hla_link_wrap" style="display:none;margin-top:8px;">
+              <input id="slo_hla_link" name="slo_hla_link" type="text" placeholder="Link to high-level architecture documentation (URL)" autocomplete="off" />
+            </div>
+          </div>
         </section>
 
         <section class="card" id="dr">

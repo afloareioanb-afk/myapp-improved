@@ -54,7 +54,7 @@ if (typeof URLSearchParams === 'undefined') {
 
 
 // New schema keys
-const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "database", "database_other", "messaging", "messaging_other", "batch", "batch_other", "nar_id", "contact_email", "role_other", "agent_other_components", "dashboard_catalogue_link", "dashboard_highlevel_link", "dashboard_lowlevel_link"];
+const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "database", "database_other", "messaging", "messaging_other", "batch", "batch_other", "nar_id", "contact_email", "role_other", "agent_other_components", "dashboard_catalogue_link", "dashboard_highlevel_link", "dashboard_lowlevel_link", "slo_cujs_link", "slo_hla_link"];
 
 // Agent Instrumentation options
 const AGENT_OPTIONS = {
@@ -283,6 +283,10 @@ function getState() {
     state[key] = param === '1' ? true : param === '0' ? false : param === 'na' ? 'na' : null;
   });
   
+  // CUJs and HLA links
+  state.slo_cujs_link = params.get('slo_cujs_link') || '';
+  state.slo_hla_link = params.get('slo_hla_link') || '';
+  
 
   // Locations schema: locations[loc][capability] yes/no and drilldowns
   state.locations = {};
@@ -375,6 +379,33 @@ function setAnswer(key, value) {
     ['slo_latency', 'slo_availability', 'slo_error_budget'].forEach(function(sloKey) {
       params.set(sloKey, 'na');
     });
+  }
+  
+  // Show/hide link input fields for CUJs and HLA when Yes is selected
+  if (key === 'slo_cujs') {
+    const cujsLinkWrap = document.getElementById('slo_cujs_link_wrap');
+    if (cujsLinkWrap) {
+      cujsLinkWrap.style.display = value === true ? '' : 'none';
+      if (value !== true) {
+        const cujsLinkInput = document.getElementById('slo_cujs_link');
+        if (cujsLinkInput) {
+          params.delete('slo_cujs_link');
+        }
+      }
+    }
+  }
+  
+  if (key === 'slo_hla') {
+    const hlaLinkWrap = document.getElementById('slo_hla_link_wrap');
+    if (hlaLinkWrap) {
+      hlaLinkWrap.style.display = value === true ? '' : 'none';
+      if (value !== true) {
+        const hlaLinkInput = document.getElementById('slo_hla_link');
+        if (hlaLinkInput) {
+          params.delete('slo_hla_link');
+        }
+      }
+    }
   }
   
   const newUrl = location.pathname + (params.toString() ? '?' + params.toString() : '');
@@ -825,6 +856,17 @@ function resetAll() {
   const sloAdditionalOtherInput = document.getElementById('slo_additional_other');
   if (sloAdditionalOtherInput) sloAdditionalOtherInput.value = '';
   
+  // Reset CUJs and HLA link inputs
+  const cujsLinkWrap = document.getElementById('slo_cujs_link_wrap');
+  const cujsLinkInput = document.getElementById('slo_cujs_link');
+  if (cujsLinkWrap) cujsLinkWrap.style.display = 'none';
+  if (cujsLinkInput) cujsLinkInput.value = '';
+  
+  const hlaLinkWrap = document.getElementById('slo_hla_link_wrap');
+  const hlaLinkInput = document.getElementById('slo_hla_link');
+  if (hlaLinkWrap) hlaLinkWrap.style.display = 'none';
+  if (hlaLinkInput) hlaLinkInput.value = '';
+  
   // Reset location selection
   const locSeg = document.getElementById('location_segmented');
   if (locSeg) {
@@ -928,7 +970,13 @@ function convertToCSV(data) {
   rows.push(['SLO/SLA Structure Exists', data.slo_exists ? 'Yes' : 'No']);
   rows.push(['PDM Documented', data.slo_pdm ? 'Yes' : (data.slo_pdm === 'na' ? 'N/A' : 'No')]);
   rows.push(['Critical User Journeys Documented', data.slo_cujs ? 'Yes' : (data.slo_cujs === 'na' ? 'N/A' : 'No')]);
+  if (data.slo_cujs === true && data.slo_cujs_link) {
+    rows.push(['  CUJs Documentation Link', data.slo_cujs_link]);
+  }
   rows.push(['High-Level Architecture Documented', data.slo_hla ? 'Yes' : (data.slo_hla === 'na' ? 'N/A' : 'No')]);
+  if (data.slo_hla === true && data.slo_hla_link) {
+    rows.push(['  HLA Documentation Link', data.slo_hla_link]);
+  }
   if (data.slo_exists) {
     rows.push(['  Latency SLO', data.slo_latency ? 'Yes' : 'No']);
     rows.push(['  Availability SLO', data.slo_availability ? 'Yes' : 'No']);
@@ -1124,6 +1172,9 @@ function collectAnswers() {
   // Additional SLI/SLO
   data.slo_additional = params.get('slo_additional') ? params.get('slo_additional').split('|') : [];
   data.slo_additional_other = params.get('slo_additional_other') || '';
+  // CUJs and HLA links
+  data.slo_cujs_link = params.get('slo_cujs_link') || '';
+  data.slo_hla_link = params.get('slo_hla_link') || '';
   data.other_mentions = params.get('other_mentions') || '';
   // yes/no
   YESNO_KEYS.forEach(function(key) {
@@ -1344,6 +1395,21 @@ function render() {
   const sloAdditionalOtherInput = document.getElementById('slo_additional_other');
   if (sloAdditionalOtherInput && state.slo_additional_other !== undefined && sloAdditionalOtherInput.value !== state.slo_additional_other) {
     sloAdditionalOtherInput.value = state.slo_additional_other || '';
+  }
+  
+  // Hydrate CUJs and HLA link inputs
+  const cujsLinkWrap = document.getElementById('slo_cujs_link_wrap');
+  const cujsLinkInput = document.getElementById('slo_cujs_link');
+  if (cujsLinkWrap) cujsLinkWrap.style.display = state.slo_cujs === true ? '' : 'none';
+  if (cujsLinkInput && state.slo_cujs_link !== undefined && cujsLinkInput.value !== state.slo_cujs_link) {
+    cujsLinkInput.value = state.slo_cujs_link || '';
+  }
+  
+  const hlaLinkWrap = document.getElementById('slo_hla_link_wrap');
+  const hlaLinkInput = document.getElementById('slo_hla_link');
+  if (hlaLinkWrap) hlaLinkWrap.style.display = state.slo_hla === true ? '' : 'none';
+  if (hlaLinkInput && state.slo_hla_link !== undefined && hlaLinkInput.value !== state.slo_hla_link) {
+    hlaLinkInput.value = state.slo_hla_link || '';
   }
   
   var otherMentionsTextarea = document.getElementById('other_mentions');
@@ -2001,6 +2067,9 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('alerting_mail_other').addEventListener('input', function(e){ setAnswer('alerting_mail_other', e.target.value); });
   // SLO Additional input
   document.getElementById('slo_additional_other').addEventListener('input', function(e){ setAnswer('slo_additional_other', e.target.value); });
+  // CUJs and HLA link inputs
+  document.getElementById('slo_cujs_link').addEventListener('input', function(e){ setAnswer('slo_cujs_link', e.target.value); });
+  document.getElementById('slo_hla_link').addEventListener('input', function(e){ setAnswer('slo_hla_link', e.target.value); });
   document.getElementById('other_mentions').addEventListener('input', function(e){ setAnswer('other_mentions', e.target.value); });
 
   // initial render builds everything
