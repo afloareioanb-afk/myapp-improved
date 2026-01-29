@@ -522,6 +522,11 @@ body:before {
   z-index: 1;
 }
 
+.field {
+  position: relative;
+  overflow: visible;
+}
+
 .container {
   width: 100%;
   max-width: 980px;
@@ -742,8 +747,9 @@ body:before {
   display: flex;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
   background: rgba(255,255,255,0.03);
+  position: relative;
 }
 
 .segmented button {
@@ -782,15 +788,15 @@ body:before {
 /* Custom tooltips for location buttons */
 .segmented button[data-loc] {
   position: relative;
+  overflow: visible;
 }
 
 .segmented button[data-loc]:hover::after {
   content: attr(title);
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 8px;
   padding: 8px 12px;
   background: rgba(15, 21, 51, 0.98);
   border: 1px solid rgba(82,255,224,0.3);
@@ -799,21 +805,22 @@ body:before {
   font-size: 12px;
   white-space: normal;
   max-width: 300px;
+  min-width: 200px;
   text-align: center;
   z-index: 10000;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   font-weight: 500;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .segmented button[data-loc]:hover::before {
   content: '';
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 2px;
   border: 6px solid transparent;
   border-top-color: rgba(82,255,224,0.3);
   z-index: 10001;
