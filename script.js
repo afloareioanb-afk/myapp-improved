@@ -399,7 +399,7 @@ function getIncompleteItems(state) {
     incomplete.push('Contact Email (must end with @db.com)');
   }
   if (!state.app_type) {
-    incomplete.push('Application type');
+    incomplete.push('Language');
   }
   if (!state.loc_selected) {
     incomplete.push('Location');
