@@ -54,10 +54,37 @@ if (typeof URLSearchParams === 'undefined') {
 
 
 // New schema keys
-const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "database", "database_other", "messaging", "messaging_other", "batch", "batch_other", "nar_id", "contact_email", "role_other"];
+const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "database", "database_other", "messaging", "messaging_other", "batch", "batch_other", "nar_id", "contact_email", "role_other", "agent_other_components", "dashboard_catalogue_link", "dashboard_highlevel_link", "dashboard_lowlevel_link"];
+
+// Agent Instrumentation options
+const AGENT_OPTIONS = {
+  frontend: ["New Relic", "OpenTelemetry", "Other"],
+  mobile: ["New Relic", "OpenTelemetry", "Other"],
+  service: ["New Relic", "OpenTelemetry", "Prometheus", "Other"],
+  infrastructure: ["New Relic", "GCO/Cloud Monitoring", "Geneos", "OpenTelemetry", "Prometheus", "Other"],
+  database: ["New Relic", "Geneos", "Other"],
+  messaging: ["New Relic", "Geneos", "Other"]
+};
+
+// SLO Monitoring options
+const SLO_MONITORING_OPTIONS = ["New Relic", "GCO/Cloud Monitoring"];
+
+// Logging options
+const LOGGING_TOOL_OPTIONS = ["Splunk", "Cloud Logging", "New Relic", "Geneos", "OpenTelemetry", "ELK", "Other"];
+const LOGGING_SYNTHETIC_OPTIONS = ["New Relic", "GCO", "Robotics", "LittleSister", "Other"];
+
+// Dashboard tool options
+const DASHBOARD_TOOL_OPTIONS = ["New Relic", "GCO/Cloud Monitoring", "Splunk", "Grafana", "Other"];
+
+// Alerting options
+const ALERTING_MAIL_OPTIONS = ["New Relic", "Splunk", "GCO", "Geneos", "ControlM", "Robotics", "UC4", "OPCA", "Other"];
+const ALERTING_PCP_OPTIONS = ["automated Incident", "automated callout", "Teams"];
+
+// Additional SLI/SLO options
+const SLO_ADDITIONAL_OPTIONS = ["Throughput", "Data processing services: correctness", "Data processing services: freshness", "Other"];
 const YESNO_KEYS = [
   // SLO/SLA
-  "slo_exists", "slo_pdm",
+  "slo_exists", "slo_pdm", "slo_error_budget_calc", "slo_cujs", "slo_hla",
   // DR
   "dr_plan", "dr_rto_rpo", "dr_tested",
   // Best Practices
@@ -203,6 +230,44 @@ function getState() {
   state.messaging_other = params.get('messaging_other') || '';
   state.batch = params.get('batch') || '';
   state.batch_other = params.get('batch_other') || '';
+  // Agent Instrumentation
+  state.agent_frontend = params.get('agent_frontend') ? params.get('agent_frontend').split('|') : [];
+  state.agent_frontend_other = params.get('agent_frontend_other') || '';
+  state.agent_mobile = params.get('agent_mobile') ? params.get('agent_mobile').split('|') : [];
+  state.agent_mobile_other = params.get('agent_mobile_other') || '';
+  state.agent_service = params.get('agent_service') ? params.get('agent_service').split('|') : [];
+  state.agent_service_other = params.get('agent_service_other') || '';
+  state.agent_infrastructure = params.get('agent_infrastructure') ? params.get('agent_infrastructure').split('|') : [];
+  state.agent_infrastructure_other = params.get('agent_infrastructure_other') || '';
+  state.agent_database = params.get('agent_database') ? params.get('agent_database').split('|') : [];
+  state.agent_database_other = params.get('agent_database_other') || '';
+  state.agent_messaging = params.get('agent_messaging') ? params.get('agent_messaging').split('|') : [];
+  state.agent_messaging_other = params.get('agent_messaging_other') || '';
+  state.agent_other_components = params.get('agent_other_components') || '';
+  // SLO Monitoring
+  state.slo_monitoring_tool = params.get('slo_monitoring_tool') ? params.get('slo_monitoring_tool').split('|') : [];
+  // Logging
+  state.logging_tool = params.get('logging_tool') ? params.get('logging_tool').split('|') : [];
+  state.logging_tool_other = params.get('logging_tool_other') || '';
+  state.logging_synthetic = params.get('logging_synthetic') ? params.get('logging_synthetic').split('|') : [];
+  state.logging_synthetic_other = params.get('logging_synthetic_other') || '';
+  // Dashboard
+  state.dashboard_catalogue_tool = params.get('dashboard_catalogue_tool') ? params.get('dashboard_catalogue_tool').split('|') : [];
+  state.dashboard_catalogue_other = params.get('dashboard_catalogue_other') || '';
+  state.dashboard_catalogue_link = params.get('dashboard_catalogue_link') || '';
+  state.dashboard_highlevel_tool = params.get('dashboard_highlevel_tool') ? params.get('dashboard_highlevel_tool').split('|') : [];
+  state.dashboard_highlevel_other = params.get('dashboard_highlevel_other') || '';
+  state.dashboard_highlevel_link = params.get('dashboard_highlevel_link') || '';
+  state.dashboard_lowlevel_tool = params.get('dashboard_lowlevel_tool') ? params.get('dashboard_lowlevel_tool').split('|') : [];
+  state.dashboard_lowlevel_other = params.get('dashboard_lowlevel_other') || '';
+  state.dashboard_lowlevel_link = params.get('dashboard_lowlevel_link') || '';
+  // Alerting
+  state.alerting_mail = params.get('alerting_mail') ? params.get('alerting_mail').split('|') : [];
+  state.alerting_mail_other = params.get('alerting_mail_other') || '';
+  state.alerting_pcp = params.get('alerting_pcp') ? params.get('alerting_pcp').split('|') : [];
+  // Additional SLI/SLO
+  state.slo_additional = params.get('slo_additional') ? params.get('slo_additional').split('|') : [];
+  state.slo_additional_other = params.get('slo_additional_other') || '';
   state.other_mentions = params.get('other_mentions') || '';
   // Selected location
   state.loc_selected = params.get('loc_selected') || '';
@@ -542,6 +607,8 @@ Assessment Summary:
 - Messaging: ${state.messaging || 'Not specified'}${state.messaging === 'other' && state.messaging_other ? ' (' + state.messaging_other + ')' : ''}
 - Batch: ${state.batch || 'Not specified'}${state.batch === 'other' && state.batch_other ? ' (' + state.batch_other + ')' : ''}
 - Location: ${state.loc_selected || 'Not specified'}
+- Critical User Journeys: ${state.slo_cujs ? 'Yes' : (state.slo_cujs === 'na' ? 'N/A' : 'No')}
+- High-Level Architecture: ${state.slo_hla ? 'Yes' : (state.slo_hla === 'na' ? 'N/A' : 'No')}
 - Assessment Date: ${new Date().toLocaleDateString()}
 
 The CSV file contains detailed responses to all assessment questions.
@@ -664,6 +731,100 @@ function resetAll() {
     if (batchOtherWrap) batchOtherWrap.style.display = 'none';
   }
   
+  // Reset agent instrumentation chip sets
+  Object.keys(AGENT_OPTIONS).forEach(function(type) {
+    const chips = document.getElementById('agent_' + type + '_chips');
+    if (chips) {
+      chips.querySelectorAll('.pill').forEach(function(chip) {
+        chip.classList.remove('selected');
+      });
+    }
+    const otherWrap = document.getElementById('agent_' + type + '_other_wrap');
+    if (otherWrap) otherWrap.style.display = 'none';
+    const otherInput = document.getElementById('agent_' + type + '_other');
+    if (otherInput) otherInput.value = '';
+  });
+  const agentOtherComponentsInput = document.getElementById('agent_other_components');
+  if (agentOtherComponentsInput) agentOtherComponentsInput.value = '';
+  
+  // Reset SLO monitoring chip set
+  const sloMonitoringChips = document.getElementById('slo_monitoring_tool_chips');
+  if (sloMonitoringChips) {
+    sloMonitoringChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  
+  // Reset logging chip sets
+  const loggingToolChips = document.getElementById('logging_tool_chips');
+  if (loggingToolChips) {
+    loggingToolChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  const loggingToolOtherWrap = document.getElementById('logging_tool_other_wrap');
+  if (loggingToolOtherWrap) loggingToolOtherWrap.style.display = 'none';
+  const loggingToolOtherInput = document.getElementById('logging_tool_other');
+  if (loggingToolOtherInput) loggingToolOtherInput.value = '';
+  
+  const loggingSyntheticChips = document.getElementById('logging_synthetic_chips');
+  if (loggingSyntheticChips) {
+    loggingSyntheticChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  const loggingSyntheticOtherWrap = document.getElementById('logging_synthetic_other_wrap');
+  if (loggingSyntheticOtherWrap) loggingSyntheticOtherWrap.style.display = 'none';
+  const loggingSyntheticOtherInput = document.getElementById('logging_synthetic_other');
+  if (loggingSyntheticOtherInput) loggingSyntheticOtherInput.value = '';
+  
+  // Reset dashboard chip sets and inputs
+  ['catalogue', 'highlevel', 'lowlevel'].forEach(function(type) {
+    const chips = document.getElementById('dashboard_' + type + '_tool_chips');
+    if (chips) {
+      chips.querySelectorAll('.pill').forEach(function(chip) {
+        chip.classList.remove('selected');
+      });
+    }
+    const otherWrap = document.getElementById('dashboard_' + type + '_other_wrap');
+    if (otherWrap) otherWrap.style.display = 'none';
+    const otherInput = document.getElementById('dashboard_' + type + '_other');
+    if (otherInput) otherInput.value = '';
+    const linkInput = document.getElementById('dashboard_' + type + '_link');
+    if (linkInput) linkInput.value = '';
+  });
+  
+  // Reset alerting chip sets
+  const alertingMailChips = document.getElementById('alerting_mail_chips');
+  if (alertingMailChips) {
+    alertingMailChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  const alertingMailOtherWrap = document.getElementById('alerting_mail_other_wrap');
+  if (alertingMailOtherWrap) alertingMailOtherWrap.style.display = 'none';
+  const alertingMailOtherInput = document.getElementById('alerting_mail_other');
+  if (alertingMailOtherInput) alertingMailOtherInput.value = '';
+  
+  const alertingPcpChips = document.getElementById('alerting_pcp_chips');
+  if (alertingPcpChips) {
+    alertingPcpChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  
+  // Reset SLO additional chip set
+  const sloAdditionalChips = document.getElementById('slo_additional_chips');
+  if (sloAdditionalChips) {
+    sloAdditionalChips.querySelectorAll('.pill').forEach(function(chip) {
+      chip.classList.remove('selected');
+    });
+  }
+  const sloAdditionalOtherWrap = document.getElementById('slo_additional_other_wrap');
+  if (sloAdditionalOtherWrap) sloAdditionalOtherWrap.style.display = 'none';
+  const sloAdditionalOtherInput = document.getElementById('slo_additional_other');
+  if (sloAdditionalOtherInput) sloAdditionalOtherInput.value = '';
+  
   // Reset location selection
   const locSeg = document.getElementById('location_segmented');
   if (locSeg) {
@@ -766,10 +927,15 @@ function convertToCSV(data) {
   // Add SLO/SLA
   rows.push(['SLO/SLA Structure Exists', data.slo_exists ? 'Yes' : 'No']);
   rows.push(['PDM Documented', data.slo_pdm ? 'Yes' : (data.slo_pdm === 'na' ? 'N/A' : 'No')]);
+  rows.push(['Critical User Journeys Documented', data.slo_cujs ? 'Yes' : (data.slo_cujs === 'na' ? 'N/A' : 'No')]);
+  rows.push(['High-Level Architecture Documented', data.slo_hla ? 'Yes' : (data.slo_hla === 'na' ? 'N/A' : 'No')]);
   if (data.slo_exists) {
     rows.push(['  Latency SLO', data.slo_latency ? 'Yes' : 'No']);
     rows.push(['  Availability SLO', data.slo_availability ? 'Yes' : 'No']);
+    rows.push(['  Additional SLI/SLO', data.slo_additional ? data.slo_additional.join(', ') : '']);
+    if (data.slo_additional_other) rows.push(['    Additional SLI/SLO Other', data.slo_additional_other]);
     rows.push(['  Error Budget Defined', data.slo_error_budget ? 'Yes' : 'No']);
+    rows.push(['  Error Budget Calculation', data.slo_error_budget_calc ? 'Yes' : (data.slo_error_budget_calc === 'na' ? 'N/A' : 'No')]);
   }
   
   rows.push([]);
@@ -787,6 +953,59 @@ function convertToCSV(data) {
   rows.push(['Alert Noise Documented', data.bp_noise ? 'Yes' : (data.bp_noise === 'na' ? 'N/A' : 'No')]);
   rows.push(['MTTR Tracked', data.bp_mttr ? 'Yes' : (data.bp_mttr === 'na' ? 'N/A' : 'No')]);
   rows.push(['Direct Dependencies Documented', data.bp_dependencies ? 'Yes' : (data.bp_dependencies === 'na' ? 'N/A' : 'No')]);
+  rows.push([]);
+  
+  // Add Agent Instrumentation
+  rows.push(['Agent Instrumentation']);
+  rows.push(['  Frontend (Browser)', data.agent_frontend ? data.agent_frontend.join(', ') : '']);
+  if (data.agent_frontend_other) rows.push(['    Frontend Other', data.agent_frontend_other]);
+  rows.push(['  Mobile', data.agent_mobile ? data.agent_mobile.join(', ') : '']);
+  if (data.agent_mobile_other) rows.push(['    Mobile Other', data.agent_mobile_other]);
+  rows.push(['  Service', data.agent_service ? data.agent_service.join(', ') : '']);
+  if (data.agent_service_other) rows.push(['    Service Other', data.agent_service_other]);
+  rows.push(['  Infrastructure', data.agent_infrastructure ? data.agent_infrastructure.join(', ') : '']);
+  if (data.agent_infrastructure_other) rows.push(['    Infrastructure Other', data.agent_infrastructure_other]);
+  rows.push(['  Database', data.agent_database ? data.agent_database.join(', ') : '']);
+  if (data.agent_database_other) rows.push(['    Database Other', data.agent_database_other]);
+  rows.push(['  Messaging', data.agent_messaging ? data.agent_messaging.join(', ') : '']);
+  if (data.agent_messaging_other) rows.push(['    Messaging Other', data.agent_messaging_other]);
+  if (data.agent_other_components) rows.push(['  Other Components', data.agent_other_components]);
+  rows.push([]);
+  
+  // Add SLO Monitoring
+  rows.push(['Service Level (SLO) Monitoring']);
+  rows.push(['  Tool', data.slo_monitoring_tool ? data.slo_monitoring_tool.join(', ') : '']);
+  rows.push([]);
+  
+  // Add Logging
+  rows.push(['Logging']);
+  rows.push(['  Tool', data.logging_tool ? data.logging_tool.join(', ') : '']);
+  if (data.logging_tool_other) rows.push(['    Tool Other', data.logging_tool_other]);
+  rows.push(['  Synthetic Monitor Instrumentation', data.logging_synthetic ? data.logging_synthetic.join(', ') : '']);
+  if (data.logging_synthetic_other) rows.push(['    Synthetic Other', data.logging_synthetic_other]);
+  rows.push([]);
+  
+  // Add Dashboard
+  rows.push(['Dashboard']);
+  rows.push(['  Catalogue/Central Dashboard']);
+  rows.push(['    Tool', data.dashboard_catalogue_tool ? data.dashboard_catalogue_tool.join(', ') : '']);
+  if (data.dashboard_catalogue_other) rows.push(['    Tool Other', data.dashboard_catalogue_other]);
+  rows.push(['    Link', data.dashboard_catalogue_link || '']);
+  rows.push(['  High Level Dashboard']);
+  rows.push(['    Tool', data.dashboard_highlevel_tool ? data.dashboard_highlevel_tool.join(', ') : '']);
+  if (data.dashboard_highlevel_other) rows.push(['    Tool Other', data.dashboard_highlevel_other]);
+  rows.push(['    Link', data.dashboard_highlevel_link || '']);
+  rows.push(['  Low Level/Specific Dashboard']);
+  rows.push(['    Tool', data.dashboard_lowlevel_tool ? data.dashboard_lowlevel_tool.join(', ') : '']);
+  if (data.dashboard_lowlevel_other) rows.push(['    Tool Other', data.dashboard_lowlevel_other]);
+  rows.push(['    Link', data.dashboard_lowlevel_link || '']);
+  rows.push([]);
+  
+  // Add Alerting
+  rows.push(['Alerting']);
+  rows.push(['  Mail Notification', data.alerting_mail ? data.alerting_mail.join(', ') : '']);
+  if (data.alerting_mail_other) rows.push(['    Mail Other', data.alerting_mail_other]);
+  rows.push(['  PCP Integration', data.alerting_pcp ? data.alerting_pcp.join(', ') : '']);
   rows.push([]);
   
   // Add Locations
@@ -867,9 +1086,53 @@ function collectAnswers() {
   data.messaging_other = params.get('messaging_other') || '';
   data.batch = params.get('batch') || '';
   data.batch_other = params.get('batch_other') || '';
+  // Agent Instrumentation
+  data.agent_frontend = params.get('agent_frontend') ? params.get('agent_frontend').split('|') : [];
+  data.agent_frontend_other = params.get('agent_frontend_other') || '';
+  data.agent_mobile = params.get('agent_mobile') ? params.get('agent_mobile').split('|') : [];
+  data.agent_mobile_other = params.get('agent_mobile_other') || '';
+  data.agent_service = params.get('agent_service') ? params.get('agent_service').split('|') : [];
+  data.agent_service_other = params.get('agent_service_other') || '';
+  data.agent_infrastructure = params.get('agent_infrastructure') ? params.get('agent_infrastructure').split('|') : [];
+  data.agent_infrastructure_other = params.get('agent_infrastructure_other') || '';
+  data.agent_database = params.get('agent_database') ? params.get('agent_database').split('|') : [];
+  data.agent_database_other = params.get('agent_database_other') || '';
+  data.agent_messaging = params.get('agent_messaging') ? params.get('agent_messaging').split('|') : [];
+  data.agent_messaging_other = params.get('agent_messaging_other') || '';
+  data.agent_other_components = params.get('agent_other_components') || '';
+  // SLO Monitoring
+  data.slo_monitoring_tool = params.get('slo_monitoring_tool') ? params.get('slo_monitoring_tool').split('|') : [];
+  // Logging
+  data.logging_tool = params.get('logging_tool') ? params.get('logging_tool').split('|') : [];
+  data.logging_tool_other = params.get('logging_tool_other') || '';
+  data.logging_synthetic = params.get('logging_synthetic') ? params.get('logging_synthetic').split('|') : [];
+  data.logging_synthetic_other = params.get('logging_synthetic_other') || '';
+  // Dashboard
+  data.dashboard_catalogue_tool = params.get('dashboard_catalogue_tool') ? params.get('dashboard_catalogue_tool').split('|') : [];
+  data.dashboard_catalogue_other = params.get('dashboard_catalogue_other') || '';
+  data.dashboard_catalogue_link = params.get('dashboard_catalogue_link') || '';
+  data.dashboard_highlevel_tool = params.get('dashboard_highlevel_tool') ? params.get('dashboard_highlevel_tool').split('|') : [];
+  data.dashboard_highlevel_other = params.get('dashboard_highlevel_other') || '';
+  data.dashboard_highlevel_link = params.get('dashboard_highlevel_link') || '';
+  data.dashboard_lowlevel_tool = params.get('dashboard_lowlevel_tool') ? params.get('dashboard_lowlevel_tool').split('|') : [];
+  data.dashboard_lowlevel_other = params.get('dashboard_lowlevel_other') || '';
+  data.dashboard_lowlevel_link = params.get('dashboard_lowlevel_link') || '';
+  // Alerting
+  data.alerting_mail = params.get('alerting_mail') ? params.get('alerting_mail').split('|') : [];
+  data.alerting_mail_other = params.get('alerting_mail_other') || '';
+  data.alerting_pcp = params.get('alerting_pcp') ? params.get('alerting_pcp').split('|') : [];
+  // Additional SLI/SLO
+  data.slo_additional = params.get('slo_additional') ? params.get('slo_additional').split('|') : [];
+  data.slo_additional_other = params.get('slo_additional_other') || '';
   data.other_mentions = params.get('other_mentions') || '';
   // yes/no
   YESNO_KEYS.forEach(function(key) {
+    const v = params.get(key);
+    data[key] = v === '1' ? true : v === '0' ? false : v === 'na' ? 'na' : null;
+  });
+  
+  // SLO sub-questions
+  ['slo_latency','slo_availability','slo_error_budget'].forEach(function(key) {
     const v = params.get(key);
     data[key] = v === '1' ? true : v === '0' ? false : v === 'na' ? 'na' : null;
   });
@@ -960,10 +1223,19 @@ function render() {
   const state = getState();
   // rebuild dynamic sections first
   buildLocations();
+  // build chip sets for new sections
+  buildAgentInstrumentation();
+  buildSLOMonitoring();
+  buildLogging();
+  buildDashboard();
+  buildAlerting();
+  buildSLOAdditional();
   // (re)build all yes/no option controls
   buildYesNoOptions();
   // hydrate selections and visuals
   hydrateSelections(state);
+  // hydrate chip sets
+  hydrateChipSets();
   // hydrate sensitive inputs from secure storage
   var appNameInput = document.getElementById('app_name');
   var roleSelect = document.getElementById('role');
@@ -1032,6 +1304,48 @@ function render() {
     if (batchOtherWrap) batchOtherWrap.style.display = state.batch === 'other' ? '' : 'none';
     if (batchOtherInput && batchOtherInput.value !== state.batch_other) batchOtherInput.value = state.batch_other || '';
   }
+  // Hydrate agent instrumentation other inputs
+  const agentOtherInputs = ['agent_frontend_other', 'agent_mobile_other', 'agent_service_other', 'agent_infrastructure_other', 'agent_database_other', 'agent_messaging_other', 'agent_other_components'];
+  agentOtherInputs.forEach(function(inputId) {
+    const input = document.getElementById(inputId);
+    const stateKey = inputId.replace(/-/g, '_');
+    if (input && state[stateKey] !== undefined && input.value !== state[stateKey]) {
+      input.value = state[stateKey] || '';
+    }
+  });
+  
+  // Hydrate logging other inputs
+  const loggingOtherInputs = ['logging_tool_other', 'logging_synthetic_other'];
+  loggingOtherInputs.forEach(function(inputId) {
+    const input = document.getElementById(inputId);
+    const stateKey = inputId.replace(/-/g, '_');
+    if (input && state[stateKey] !== undefined && input.value !== state[stateKey]) {
+      input.value = state[stateKey] || '';
+    }
+  });
+  
+  // Hydrate dashboard inputs
+  const dashboardInputs = ['dashboard_catalogue_other', 'dashboard_catalogue_link', 'dashboard_highlevel_other', 'dashboard_highlevel_link', 'dashboard_lowlevel_other', 'dashboard_lowlevel_link'];
+  dashboardInputs.forEach(function(inputId) {
+    const input = document.getElementById(inputId);
+    const stateKey = inputId.replace(/-/g, '_');
+    if (input && state[stateKey] !== undefined && input.value !== state[stateKey]) {
+      input.value = state[stateKey] || '';
+    }
+  });
+  
+  // Hydrate alerting other input
+  const alertingMailOtherInput = document.getElementById('alerting_mail_other');
+  if (alertingMailOtherInput && state.alerting_mail_other !== undefined && alertingMailOtherInput.value !== state.alerting_mail_other) {
+    alertingMailOtherInput.value = state.alerting_mail_other || '';
+  }
+  
+  // Hydrate SLO additional other input
+  const sloAdditionalOtherInput = document.getElementById('slo_additional_other');
+  if (sloAdditionalOtherInput && state.slo_additional_other !== undefined && sloAdditionalOtherInput.value !== state.slo_additional_other) {
+    sloAdditionalOtherInput.value = state.slo_additional_other || '';
+  }
+  
   var otherMentionsTextarea = document.getElementById('other_mentions');
   if (otherMentionsTextarea && otherMentionsTextarea.value !== state.other_mentions) otherMentionsTextarea.value = state.other_mentions || '';
   renderProgress(state);
@@ -1062,6 +1376,50 @@ function buildYesNoOptions() {
     }
     container.innerHTML = '';
     createYesNo(container, key);
+  });
+}
+
+function buildAgentInstrumentation() {
+  Object.keys(AGENT_OPTIONS).forEach(function(type) {
+    buildChipSet('agent_' + type + '_chips', 'agent_' + type, AGENT_OPTIONS[type]);
+  });
+}
+
+function buildSLOMonitoring() {
+  buildChipSet('slo_monitoring_tool_chips', 'slo_monitoring_tool', SLO_MONITORING_OPTIONS);
+}
+
+function buildLogging() {
+  buildChipSet('logging_tool_chips', 'logging_tool', LOGGING_TOOL_OPTIONS);
+  buildChipSet('logging_synthetic_chips', 'logging_synthetic', LOGGING_SYNTHETIC_OPTIONS);
+}
+
+function buildDashboard() {
+  buildChipSet('dashboard_catalogue_tool_chips', 'dashboard_catalogue_tool', DASHBOARD_TOOL_OPTIONS);
+  buildChipSet('dashboard_highlevel_tool_chips', 'dashboard_highlevel_tool', DASHBOARD_TOOL_OPTIONS);
+  buildChipSet('dashboard_lowlevel_tool_chips', 'dashboard_lowlevel_tool', DASHBOARD_TOOL_OPTIONS);
+}
+
+function buildAlerting() {
+  buildChipSet('alerting_mail_chips', 'alerting_mail', ALERTING_MAIL_OPTIONS);
+  buildChipSet('alerting_pcp_chips', 'alerting_pcp', ALERTING_PCP_OPTIONS);
+}
+
+function buildSLOAdditional() {
+  buildChipSet('slo_additional_chips', 'slo_additional', SLO_ADDITIONAL_OPTIONS);
+}
+
+// Hydrate chip sets (called after building)
+function hydrateChipSets() {
+  document.querySelectorAll('.chipset .pill').forEach(function(chip){
+    const key = chip.dataset.key;
+    const item = chip.dataset.item;
+    if (!key || !item) return;
+    const params = new URLSearchParams(location.search);
+    const raw = params.get(key) || '';
+    const list = raw ? raw.split('|') : [];
+    if (list.indexOf(item) >= 0) chip.classList.add('selected'); 
+    else chip.classList.remove('selected');
   });
 }
 
@@ -1255,6 +1613,16 @@ function toggleChip(key, item) {
   } else {
     location.hash = newUrl;
   }
+  
+  // Show/hide "Other" input field
+  if (item === 'Other') {
+    const otherWrapId = key + '_other_wrap';
+    const otherWrap = document.getElementById(otherWrapId);
+    if (otherWrap) {
+      otherWrap.style.display = list.indexOf('Other') >= 0 ? '' : 'none';
+    }
+  }
+  
   render();
   
   // Update capability header color immediately if this is a capability selection
@@ -1275,6 +1643,39 @@ function toggleChip(key, item) {
         }
       }
     }
+  }
+}
+
+// Helper function to build chip sets
+function buildChipSet(containerId, key, options) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  container.innerHTML = '';
+  const params = new URLSearchParams(location.search);
+  const raw = params.get(key) || '';
+  const selected = raw ? raw.split('|') : [];
+  
+  options.forEach(function(option) {
+    const chip = document.createElement('span');
+    chip.className = 'pill';
+    chip.textContent = option;
+    chip.dataset.key = key;
+    chip.dataset.item = option;
+    if (selected.indexOf(option) >= 0) {
+      chip.classList.add('selected');
+    }
+    chip.addEventListener('click', function() {
+      toggleChip(key, option);
+    });
+    container.appendChild(chip);
+  });
+  
+  // Show/hide "Other" input
+  const otherWrapId = containerId.replace(/_chips$/, '_other_wrap');
+  const otherWrap = document.getElementById(otherWrapId);
+  if (otherWrap) {
+    otherWrap.style.display = selected.indexOf('Other') >= 0 ? '' : 'none';
   }
 }
 
@@ -1578,6 +1979,28 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('database_other').addEventListener('input', function(e){ setAnswer('database_other', e.target.value); });
   document.getElementById('messaging_other').addEventListener('input', function(e){ setAnswer('messaging_other', e.target.value); });
   document.getElementById('batch_other').addEventListener('input', function(e){ setAnswer('batch_other', e.target.value); });
+  // Agent Instrumentation inputs
+  document.getElementById('agent_frontend_other').addEventListener('input', function(e){ setAnswer('agent_frontend_other', e.target.value); });
+  document.getElementById('agent_mobile_other').addEventListener('input', function(e){ setAnswer('agent_mobile_other', e.target.value); });
+  document.getElementById('agent_service_other').addEventListener('input', function(e){ setAnswer('agent_service_other', e.target.value); });
+  document.getElementById('agent_infrastructure_other').addEventListener('input', function(e){ setAnswer('agent_infrastructure_other', e.target.value); });
+  document.getElementById('agent_database_other').addEventListener('input', function(e){ setAnswer('agent_database_other', e.target.value); });
+  document.getElementById('agent_messaging_other').addEventListener('input', function(e){ setAnswer('agent_messaging_other', e.target.value); });
+  document.getElementById('agent_other_components').addEventListener('input', function(e){ setAnswer('agent_other_components', e.target.value); });
+  // Logging inputs
+  document.getElementById('logging_tool_other').addEventListener('input', function(e){ setAnswer('logging_tool_other', e.target.value); });
+  document.getElementById('logging_synthetic_other').addEventListener('input', function(e){ setAnswer('logging_synthetic_other', e.target.value); });
+  // Dashboard inputs
+  document.getElementById('dashboard_catalogue_other').addEventListener('input', function(e){ setAnswer('dashboard_catalogue_other', e.target.value); });
+  document.getElementById('dashboard_catalogue_link').addEventListener('input', function(e){ setAnswer('dashboard_catalogue_link', e.target.value); });
+  document.getElementById('dashboard_highlevel_other').addEventListener('input', function(e){ setAnswer('dashboard_highlevel_other', e.target.value); });
+  document.getElementById('dashboard_highlevel_link').addEventListener('input', function(e){ setAnswer('dashboard_highlevel_link', e.target.value); });
+  document.getElementById('dashboard_lowlevel_other').addEventListener('input', function(e){ setAnswer('dashboard_lowlevel_other', e.target.value); });
+  document.getElementById('dashboard_lowlevel_link').addEventListener('input', function(e){ setAnswer('dashboard_lowlevel_link', e.target.value); });
+  // Alerting inputs
+  document.getElementById('alerting_mail_other').addEventListener('input', function(e){ setAnswer('alerting_mail_other', e.target.value); });
+  // SLO Additional input
+  document.getElementById('slo_additional_other').addEventListener('input', function(e){ setAnswer('slo_additional_other', e.target.value); });
   document.getElementById('other_mentions').addEventListener('input', function(e){ setAnswer('other_mentions', e.target.value); });
 
   // initial render builds everything

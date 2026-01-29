@@ -250,15 +250,150 @@
           </div>
         </section>
 
+        <section class="card" id="agent-instrumentation">
+          <h2><span class="icon">🔧</span> Agent Instrumentation (for data collection/ingestion)</h2>
+          <div class="question">
+            <label>Frontend (Browser)</label>
+            <div class="chipset" id="agent_frontend_chips"></div>
+            <div class="field" id="agent_frontend_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_frontend_other" name="agent_frontend_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Mobile</label>
+            <div class="chipset" id="agent_mobile_chips"></div>
+            <div class="field" id="agent_mobile_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_mobile_other" name="agent_mobile_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Service</label>
+            <div class="chipset" id="agent_service_chips"></div>
+            <div class="field" id="agent_service_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_service_other" name="agent_service_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Infrastructure (Kubernetes cloud/fabric2, VM/GCE, server)</label>
+            <div class="chipset" id="agent_infrastructure_chips"></div>
+            <div class="field" id="agent_infrastructure_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_infrastructure_other" name="agent_infrastructure_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Database</label>
+            <div class="chipset" id="agent_database_chips"></div>
+            <div class="field" id="agent_database_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_database_other" name="agent_database_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Messaging</label>
+            <div class="chipset" id="agent_messaging_chips"></div>
+            <div class="field" id="agent_messaging_other_wrap" style="display:none;margin-top:8px;">
+              <input id="agent_messaging_other" name="agent_messaging_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="agent_other_components">Other components</label>
+            <input id="agent_other_components" name="agent_other_components" type="text" placeholder="Specify other components" autocomplete="off" />
+          </div>
+        </section>
+
+        <section class="card" id="slo-monitoring">
+          <h2><span class="icon">📊</span> Service Level (SLO) Monitoring</h2>
+          <div class="question">
+            <label>Tool</label>
+            <div class="chipset" id="slo_monitoring_tool_chips"></div>
+          </div>
+        </section>
+
+        <section class="card" id="logging">
+          <h2><span class="icon">📝</span> Logging</h2>
+          <div class="question">
+            <label>Tool</label>
+            <div class="chipset" id="logging_tool_chips"></div>
+            <div class="field" id="logging_tool_other_wrap" style="display:none;margin-top:8px;">
+              <input id="logging_tool_other" name="logging_tool_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Synthetic Monitor Instrumentation</label>
+            <div class="chipset" id="logging_synthetic_chips"></div>
+            <div class="field" id="logging_synthetic_other_wrap" style="display:none;margin-top:8px;">
+              <input id="logging_synthetic_other" name="logging_synthetic_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="dashboard">
+          <h2><span class="icon">📈</span> Dashboard</h2>
+          <div class="question">
+            <label>Catalogue/central dashboard</label>
+            <div class="chipset" id="dashboard_catalogue_tool_chips"></div>
+            <div class="field" id="dashboard_catalogue_other_wrap" style="display:none;margin-top:8px;">
+              <input id="dashboard_catalogue_other" name="dashboard_catalogue_other" type="text" placeholder="Specify other tool" autocomplete="off" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <input id="dashboard_catalogue_link" name="dashboard_catalogue_link" type="text" placeholder="Dashboard link (URL)" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>High Level dashboard (like GVO)</label>
+            <div class="chipset" id="dashboard_highlevel_tool_chips"></div>
+            <div class="field" id="dashboard_highlevel_other_wrap" style="display:none;margin-top:8px;">
+              <input id="dashboard_highlevel_other" name="dashboard_highlevel_other" type="text" placeholder="Specify other tool" autocomplete="off" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <input id="dashboard_highlevel_link" name="dashboard_highlevel_link" type="text" placeholder="Dashboard link (URL)" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>Low Level/Specific dashboard (like FSO or feature dashboard)</label>
+            <div class="chipset" id="dashboard_lowlevel_tool_chips"></div>
+            <div class="field" id="dashboard_lowlevel_other_wrap" style="display:none;margin-top:8px;">
+              <input id="dashboard_lowlevel_other" name="dashboard_lowlevel_other" type="text" placeholder="Specify other tool" autocomplete="off" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <input id="dashboard_lowlevel_link" name="dashboard_lowlevel_link" type="text" placeholder="Dashboard link (URL)" autocomplete="off" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="alerting">
+          <h2><span class="icon">🚨</span> Alerting</h2>
+          <div class="question">
+            <label>Mail notification</label>
+            <div class="chipset" id="alerting_mail_chips"></div>
+            <div class="field" id="alerting_mail_other_wrap" style="display:none;margin-top:8px;">
+              <input id="alerting_mail_other" name="alerting_mail_other" type="text" placeholder="Specify other" autocomplete="off" />
+            </div>
+          </div>
+          <div class="question">
+            <label>PCP integration</label>
+            <div class="chipset" id="alerting_pcp_chips"></div>
+          </div>
+        </section>
+
         <section class="card" id="slo-sla">
           <h2><span class="icon">🎯</span> SLO/SLA - Service levels</h2>
           <div class="question"><label>Is there a documented SLO/SLA structure for your application?</label><div class="options" data-key="slo_exists"></div></div>
           <div class="slo-sub-questions" data-drill-for="slo_exists">
             <div class="question"><label>Latency SLO (e.g., 95% < 300ms)</label><div class="options" data-key="slo_latency"></div></div>
             <div class="question"><label>Availability SLO (e.g., 99.9%)</label><div class="options" data-key="slo_availability"></div></div>
+            <div class="question">
+              <label>Add additional SLI/SLO</label>
+              <div class="chipset" id="slo_additional_chips"></div>
+              <div class="field" id="slo_additional_other_wrap" style="display:none;margin-top:8px;">
+                <input id="slo_additional_other" name="slo_additional_other" type="text" placeholder="Specify other SLI/SLO" autocomplete="off" />
+              </div>
+            </div>
             <div class="question"><label>Error budget defined</label><div class="options" data-key="slo_error_budget"></div></div>
+            <div class="question"><label>Wouldn't the error budget always be 100% - SLO target % (e.g., 5% if SLO target is 95%)?</label><div class="options" data-key="slo_error_budget_calc"></div></div>
           </div>
           <div class="question"><label>Is there a documented PDM for your application?</label><div class="options" data-key="slo_pdm"></div></div>
+          <div class="question"><label>Do you have critical user journeys documented?</label><div class="options" data-key="slo_cujs"></div></div>
+          <div class="question"><label>Do you have a high-level architecture documented?</label><div class="options" data-key="slo_hla"></div></div>
         </section>
 
         <section class="card" id="dr">
