@@ -384,12 +384,13 @@ function setAnswer(key, value) {
   // Show/hide link input fields for CUJs and HLA when Yes is selected
   if (key === 'slo_cujs') {
     const cujsLinkWrap = document.getElementById('slo_cujs_link_wrap');
+    const cujsLinkInput = document.getElementById('slo_cujs_link');
     if (cujsLinkWrap) {
       cujsLinkWrap.style.display = value === true ? '' : 'none';
       if (value !== true) {
-        const cujsLinkInput = document.getElementById('slo_cujs_link');
+        params.delete('slo_cujs_link');
         if (cujsLinkInput) {
-          params.delete('slo_cujs_link');
+          cujsLinkInput.value = '';
         }
       }
     }
@@ -397,12 +398,13 @@ function setAnswer(key, value) {
   
   if (key === 'slo_hla') {
     const hlaLinkWrap = document.getElementById('slo_hla_link_wrap');
+    const hlaLinkInput = document.getElementById('slo_hla_link');
     if (hlaLinkWrap) {
       hlaLinkWrap.style.display = value === true ? '' : 'none';
       if (value !== true) {
-        const hlaLinkInput = document.getElementById('slo_hla_link');
+        params.delete('slo_hla_link');
         if (hlaLinkInput) {
-          params.delete('slo_hla_link');
+          hlaLinkInput.value = '';
         }
       }
     }
