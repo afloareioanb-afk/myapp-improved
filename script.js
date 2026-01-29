@@ -1043,6 +1043,13 @@ function render() {
       b.classList.toggle('active', b.getAttribute('data-loc') === state.loc_selected);
     });
   }
+  
+  // Hide tooltip if location is selected
+  const tooltipEl = document.getElementById('location-tooltip');
+  if (tooltipEl && state.loc_selected) {
+    tooltipEl.style.display = 'none';
+  }
+  
   renderOnboardStats(state);
 }
 
