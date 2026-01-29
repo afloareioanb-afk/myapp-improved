@@ -54,7 +54,7 @@ if (typeof URLSearchParams === 'undefined') {
 
 
 // New schema keys
-const META_KEYS = ["app_name", "role", "app_type", "app_type_other", "nar_id", "contact_email", "role_other"];
+const META_KEYS = ["app_name", "role", "application_type", "application_type_extra", "app_type", "app_type_other", "nar_id", "contact_email", "role_other"];
 const YESNO_KEYS = [
   // SLO/SLA
   "slo_exists", "slo_pdm",
@@ -193,6 +193,8 @@ function getState() {
   state.role_other = secureGet('role_other');
   state.nar_id = secureGet('nar_id');
   state.contact_email = secureGet('contact_email');
+  state.application_type = params.get('application_type') || '';
+  state.application_type_extra = params.get('application_type_extra') || '';
   state.app_type = params.get('app_type') || '';
   state.app_type_other = params.get('app_type_other') || '';
   state.other_mentions = params.get('other_mentions') || '';
@@ -528,7 +530,8 @@ Assessment Summary:
 - Role: ${state.role || 'Not specified'}${state.role === 'other' && state.role_other ? ' (' + state.role_other + ')' : ''}
 - NAR-ID: ${state.nar_id || 'Not specified'}
 - Contact Email: ${state.contact_email || 'Not specified'}
-- Application Type: ${state.app_type}${state.app_type === 'other' ? ' (' + state.app_type_other + ')' : ''}
+- Application Type: ${state.application_type || 'Not specified'}${state.application_type_extra ? ' (' + state.application_type_extra + ')' : ''}
+- Language: ${state.app_type || 'Not specified'}${state.app_type === 'other' && state.app_type_other ? ' (' + state.app_type_other + ')' : ''}
 - Location: ${state.loc_selected || 'Not specified'}
 - Assessment Date: ${new Date().toLocaleDateString()}
 
@@ -579,6 +582,7 @@ function resetAll() {
   const roleOtherInput = document.getElementById('role_other');
   const narIdInput = document.getElementById('nar_id');
   const contactEmailInput = document.getElementById('contact_email');
+  const applicationTypeExtraInput = document.getElementById('application_type_extra');
   const appTypeOtherInput = document.getElementById('app_type_other');
   const otherMentionsTextarea = document.getElementById('other_mentions');
   
@@ -587,6 +591,7 @@ function resetAll() {
   if (roleOtherInput) roleOtherInput.value = '';
   if (narIdInput) narIdInput.value = '';
   if (contactEmailInput) contactEmailInput.value = '';
+  if (applicationTypeExtraInput) applicationTypeExtraInput.value = '';
   if (appTypeOtherInput) appTypeOtherInput.value = '';
   if (otherMentionsTextarea) otherMentionsTextarea.value = '';
   
@@ -594,7 +599,17 @@ function resetAll() {
   const roleOtherWrap = document.getElementById('role_other_wrap');
   if (roleOtherWrap) roleOtherWrap.style.display = 'none';
   
-  // Reset app type selection
+  // Reset application type selection
+  const appTypeSeg = document.getElementById('application_type_segmented');
+  if (appTypeSeg) {
+    appTypeSeg.querySelectorAll('button').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+    const applicationTypeExtraWrap = document.getElementById('application_type_extra_wrap');
+    if (applicationTypeExtraWrap) applicationTypeExtraWrap.style.display = 'none';
+  }
+  
+  // Reset language (app_type) selection
   const typeSeg = document.getElementById('app_type_segmented');
   if (typeSeg) {
     typeSeg.querySelectorAll('button').forEach(function(btn) {
@@ -681,9 +696,13 @@ function convertToCSV(data) {
   }
   rows.push(['NAR-ID', data.nar_id || '']);
   rows.push(['Contact Email', data.contact_email || '']);
-  rows.push(['Application Type', data.app_type || '']);
+  rows.push(['Application Type', data.application_type || '']);
+  if (data.application_type_extra) {
+    rows.push(['Application Type (Extra Info)', data.application_type_extra || '']);
+  }
+  rows.push(['Language', data.app_type || '']);
   if (data.app_type === 'other') {
-    rows.push(['Application Type (Other)', data.app_type_other || '']);
+    rows.push(['Language (Other)', data.app_type_other || '']);
   }
   rows.push([]);
   
@@ -781,6 +800,8 @@ function collectAnswers() {
   data.role_other = secureGet('role_other') || '';
   data.nar_id = secureGet('nar_id') || '';
   data.contact_email = secureGet('contact_email') || '';
+  data.application_type = params.get('application_type') || '';
+  data.application_type_extra = params.get('application_type_extra') || '';
   data.app_type = params.get('app_type') || '';
   data.app_type_other = params.get('app_type_other') || '';
   data.other_mentions = params.get('other_mentions') || '';
@@ -895,6 +916,26 @@ function render() {
   if (roleOtherInput && roleOtherInput.value !== state.role_other) roleOtherInput.value = state.role_other || '';
   if (narIdInput && narIdInput.value !== state.nar_id) narIdInput.value = state.nar_id || '';
   if (contactEmailInput && contactEmailInput.value !== state.contact_email) contactEmailInput.value = state.contact_email || '';
+  // Hydrate application type
+  const appTypeSeg = document.getElementById('application_type_segmented');
+  if (appTypeSeg) {
+    appTypeSeg.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-apptype') === state.application_type);
+    });
+    const appTypeExtraWrap = document.getElementById('application_type_extra_wrap');
+    const appTypeExtraInput = document.getElementById('application_type_extra');
+    if (appTypeExtraWrap) appTypeExtraWrap.style.display = state.application_type ? '' : 'none';
+    if (appTypeExtraInput && appTypeExtraInput.value !== state.application_type_extra) appTypeExtraInput.value = state.application_type_extra || '';
+  }
+  // Hydrate language (app_type)
+  const langSeg = document.getElementById('app_type_segmented');
+  if (langSeg) {
+    langSeg.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-type') === state.app_type);
+    });
+    const langOtherWrap = document.getElementById('app_type_other_wrap');
+    if (langOtherWrap) langOtherWrap.style.display = state.app_type === 'other' ? '' : 'none';
+  }
   var otherMentionsTextarea = document.getElementById('other_mentions');
   if (otherMentionsTextarea && otherMentionsTextarea.value !== state.other_mentions) otherMentionsTextarea.value = state.other_mentions || '';
   renderProgress(state);
@@ -1338,16 +1379,31 @@ function applyStat(el, text, pctText) {
 
 // Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', function() {
-  // build meta inputs
-  const typeSeg = document.getElementById('app_type_segmented');
-  typeSeg.querySelectorAll('button').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      const selected = btn.getAttribute('data-type');
-      setAnswer('app_type', selected);
-      document.getElementById('app_type_other_wrap').style.display = selected === 'other' ? '' : 'none';
-      typeSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+  // build application type inputs
+  const appTypeSeg = document.getElementById('application_type_segmented');
+  if (appTypeSeg) {
+    appTypeSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const selected = btn.getAttribute('data-apptype');
+        setAnswer('application_type', selected);
+        const appTypeExtraWrap = document.getElementById('application_type_extra_wrap');
+        if (appTypeExtraWrap) appTypeExtraWrap.style.display = selected ? '' : 'none';
+        appTypeSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      });
     });
-  });
+  }
+  // build language (app_type) inputs
+  const typeSeg = document.getElementById('app_type_segmented');
+  if (typeSeg) {
+    typeSeg.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const selected = btn.getAttribute('data-type');
+        setAnswer('app_type', selected);
+        document.getElementById('app_type_other_wrap').style.display = selected === 'other' ? '' : 'none';
+        typeSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      });
+    });
+  }
   document.getElementById('app_name').addEventListener('input', function(e){ setAnswer('app_name', e.target.value); });
   document.getElementById('role').addEventListener('change', function(e){ 
     setAnswer('role', e.target.value);
@@ -1370,6 +1426,7 @@ window.addEventListener('DOMContentLoaded', function() {
     const state = getState();
     renderProgress(state);
   });
+  document.getElementById('application_type_extra').addEventListener('input', function(e){ setAnswer('application_type_extra', e.target.value); });
   document.getElementById('app_type_other').addEventListener('input', function(e){ setAnswer('app_type_other', e.target.value); });
   document.getElementById('other_mentions').addEventListener('input', function(e){ setAnswer('other_mentions', e.target.value); });
 
