@@ -104,28 +104,6 @@
         <div class="progress-bar"><span id="progress-bar-fill"></span></div>
         <span id="progress-label">0% answered</span>
       </div>
-      <div class="stats-wrap">
-        <div class="stats-group">
-          <span id="onboard-frontend">Frontend onboard: —</span>
-          <span id="onboard-frontend-mon" class="sub">Monitor: —</span>
-          <span id="onboard-frontend-al" class="sub">Alert: —</span>
-        </div>
-        <div class="stats-group">
-          <span id="onboard-backend">Backend onboard: —</span>
-          <span id="onboard-backend-mon" class="sub">Monitor: —</span>
-          <span id="onboard-backend-al" class="sub">Alert: —</span>
-        </div>
-        <div class="stats-group">
-          <span id="onboard-apis">APIs onboard: —</span>
-          <span id="onboard-apis-mon" class="sub">Monitor: —</span>
-          <span id="onboard-apis-al" class="sub">Alert: —</span>
-        </div>
-        <div class="stats-group">
-          <span id="onboard-mobile">Mobile onboard: —</span>
-          <span id="onboard-mobile-mon" class="sub">Monitor: —</span>
-          <span id="onboard-mobile-al" class="sub">Alert: —</span>
-        </div>
-      </div>
     </header>
 
     <main class="container">
@@ -202,21 +180,6 @@
             <div class="field" id="role_other_wrap" style="display:none;margin-top:8px;">
               <input id="role_other" name="role_other" type="text" placeholder="Specify other role" autocomplete="off" />
             </div>
-        </section>
-
-        <section class="card" id="locations">
-          <h2><span class="icon">🌐</span> Infrastructure/Application Hosting</h2>
-          <div class="field">
-            <label>Select one location</label>
-            <div class="segmented" id="location_segmented">
-              <button type="button" data-loc="gcp" data-tooltip="GKE,GCE,Cloud Run,Cloud Function">GCP</button>
-              <button type="button" data-loc="onprem" data-tooltip="Fabric2/OpenShift,VHS, DAP,Mainframe,Other">On-Prem</button>
-              <button type="button" data-loc="hybrid" data-tooltip="GKE,GCE,Cloud Run,Cloud Function + Fabric2/OpenShift,VHS, DAP,Mainframe,Other">Hybrid</button>
-            </div>
-          </div>
-          <div id="locations-root">
-            <div id="location-tooltip" class="location-tooltip" style="display:none;"></div>
-          </div>
         </section>
 
         <section class="card" id="agent-instrumentation">

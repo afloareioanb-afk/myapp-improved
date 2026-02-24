@@ -100,51 +100,6 @@ const YESNO_KEYS = [
 
 
 
-const LOCATIONS = ["gcp", "onprem", "hybrid"];
-const CAPABILITIES = ["frontend", "backend", "apis", "mobile"];
-const CATEGORIES = ["monitoring", "alerting", "reporting", "stip", "geneos", "lisi"];
-const PROVIDERS = {
-  monitoring: ["newrelic", "splunk"],
-  alerting: ["newrelic", "splunk"],
-};
-
-// Updated monitoring items - removed "SYNT tests" and "BROWSER (dashboard)" from backend and APIs
-const MON_ITEMS = {
-  newrelic: ["APM (dashboard)", "INFRA (dashboard)", "Golden Signals (dashboard)", "SYNT", "Other"],
-  splunk: [
-    "Response times","HTTP Response Codes","Error Rate","Throughput","Availability","Anomalies","DB connections","Restarts/Uptime","Other"
-  ],
-  "cloud-monitoring": [
-    "Response times","HTTP Response Codes","Error Rate","Throughput","Availability","Anomalies","DB connections","Restarts/Uptime","Other"
-  ],
-};
-
-const ALERT_ITEMS = {
-  newrelic: ["Availability", "Error rate", "Other"],
-  splunk: ["Critical errors", "Error Rate", "Other"],
-  "cloud-monitoring": ["Critical errors", "Error Rate", "Other"],
-};
-
-// Get providers based on location
-function getProvidersForLocation(location) {
-  if (location === 'gcp') {
-    return {
-      monitoring: ["newrelic", "cloud-monitoring"],
-      alerting: ["newrelic", "cloud-monitoring"],
-    };
-  }
-  if (location === 'hybrid') {
-    return {
-      monitoring: ["newrelic", "splunk", "cloud-monitoring"],
-      alerting: ["newrelic", "splunk", "cloud-monitoring"],
-    };
-  }
-  return {
-    monitoring: ["newrelic", "splunk"],
-    alerting: ["newrelic", "splunk"],
-  };
-}
-
 // Secure storage helpers for sensitive fields (kept out of URL)
 function secureStorageAvailable() {
   try {
@@ -276,8 +231,6 @@ function getState() {
   state.slo_additional = params.get('slo_additional') ? params.get('slo_additional').split('|') : [];
   state.slo_additional_other = params.get('slo_additional_other') || '';
   state.other_mentions = params.get('other_mentions') || '';
-  // Selected location
-  state.loc_selected = params.get('loc_selected') || '';
   // Yes/No
   YESNO_KEYS.forEach(function(key) {
     const param = params.get(key);
@@ -293,45 +246,6 @@ function getState() {
   // CUJs and HLA links
   state.slo_cujs_link = params.get('slo_cujs_link') || '';
   state.slo_hla_link = params.get('slo_hla_link') || '';
-  
-
-  // Locations schema: locations[loc][capability] yes/no and drilldowns
-  state.locations = {};
-  LOCATIONS.forEach(function(loc) {
-    state.locations[loc] = {};
-    CAPABILITIES.forEach(function(cap) {
-      const k = 'loc_' + loc + '_' + cap;
-      const v = params.get(k);
-      const parsed = v === '1' ? true : v === '0' ? false : v === 'na' ? 'na' : null;
-      state.locations[loc][cap] = parsed;
-      // expose capability value at top-level for UI highlight
-      state[k] = parsed;
-             // drilldowns multi-select as CSV: loc_loc_cat_provider=item1|item2
-       CATEGORIES.forEach(function(cat) {
-         if (cat === 'reporting' || cat === 'stip' || cat === 'geneos' || cat === 'lisi') return; // simple yes/no
-         const locationProviders = getProvidersForLocation(loc);
-         (locationProviders[cat]||[]).forEach(function(prov) {
-           const dk = 'loc_' + loc + '_' + cap + '_' + cat + '_' + prov;
-           const raw = params.get(dk);
-           state[dk] = raw ? raw.split('|') : [];
-         });
-       });
-      // simple yes/no for reporting, stip, geneos & lisi
-      ['reporting','stip','geneos','lisi'].forEach(function(simple){
-        const sk = 'loc_' + loc + '_' + cap + '_' + simple;
-        const sv = params.get(sk);
-        state[sk] = sv === '1' ? true : sv === '0' ? false : sv === 'na' ? 'na' : null;
-        // Handle provider drill-downs for stip only
-        if (simple === 'stip') {
-          ['newrelic', 'splunk'].forEach(function(prov){
-            const dk = 'loc_' + loc + '_' + cap + '_' + simple + '_' + prov;
-            const raw = params.get(dk);
-            state[dk] = raw ? raw.split('|') : [];
-          });
-        }
-      });
-    });
-  });
   return state;
 }
 
@@ -514,9 +428,6 @@ function getIncompleteItems(state) {
   if (!state.app_type || state.app_type.length === 0) {
     incomplete.push('Language');
   }
-  if (!state.loc_selected) {
-    incomplete.push('Location');
-  }
   
   // Check YESNO_KEYS questions
   const questionLabels = {
@@ -556,38 +467,6 @@ function getIncompleteItems(state) {
   } else if (state.slo_exists !== false && state.slo_exists !== 'na') {
     // SLO exists question itself is incomplete
     incomplete.push('SLO/SLA structure');
-  }
-  
-  // Check location capability questions
-  if (state.loc_selected) {
-    const capLabels = {
-      'frontend': 'Frontend',
-      'backend': 'Backend',
-      'apis': 'APIs',
-      'mobile': 'Mobile'
-    };
-    const integrationLabels = {
-      'reporting': 'Reporting',
-      'stip': 'Stip Integration',
-      'geneos': 'Geneos Integration',
-      'lisi': 'Lisi Integration'
-    };
-    
-    CAPABILITIES.forEach(function(cap) {
-      const v = state.locations && state.locations[state.loc_selected] && state.locations[state.loc_selected][cap];
-      if (v !== true && v !== false && v !== 'na') {
-        incomplete.push(capLabels[cap] + ' component');
-      } else if (v === true) {
-        // Check integration questions when capability is YES
-        ['reporting','stip','geneos','lisi'].forEach(function(simple) {
-          const key = 'loc_' + state.loc_selected + '_' + cap + '_' + simple;
-          const sv = state[key];
-          if (sv !== true && sv !== false && sv !== 'na') {
-            incomplete.push(capLabels[cap] + ' - ' + integrationLabels[simple]);
-          }
-        });
-      }
-    });
   }
   
   return incomplete;
@@ -646,7 +525,6 @@ Assessment Summary:
 - Database: ${state.database && state.database.length ? state.database.join(', ') : 'Not specified'}${(state.database || []).indexOf('Other') >= 0 && state.database_other ? ' (' + state.database_other + ')' : ''}
 - Messaging: ${state.messaging && state.messaging.length ? state.messaging.join(', ') : 'Not specified'}${(state.messaging || []).indexOf('Other') >= 0 && state.messaging_other ? ' (' + state.messaging_other + ')' : ''}
 - Batch: ${state.batch && state.batch.length ? state.batch.join(', ') : 'Not specified'}${(state.batch || []).indexOf('Other') >= 0 && state.batch_other ? ' (' + state.batch_other + ')' : ''}
-- Location: ${state.loc_selected || 'Not specified'}
 - Critical User Journeys: ${state.slo_cujs ? 'Yes' : (state.slo_cujs === 'na' ? 'N/A' : 'No')}
 - High-Level Architecture: ${state.slo_hla ? 'Yes' : (state.slo_hla === 'na' ? 'N/A' : 'No')}
 - Assessment Date: ${new Date().toLocaleDateString()}
@@ -846,14 +724,6 @@ function resetAll() {
   if (hlaLinkWrap) hlaLinkWrap.style.display = 'none';
   if (hlaLinkInput) hlaLinkInput.value = '';
   
-  // Reset location selection
-  const locSeg = document.getElementById('location_segmented');
-  if (locSeg) {
-    locSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-  }
-  
   render();
 }
 
@@ -1035,52 +905,6 @@ function convertToCSV(data) {
   rows.push(['  PCP Integration', data.alerting_pcp ? data.alerting_pcp.join(', ') : '']);
   rows.push([]);
   
-  // Add Locations
-  if (data.locations) {
-    Object.keys(data.locations).forEach(function(loc) {
-      const caps = data.locations[loc];
-      rows.push(['Location: ' + loc.toUpperCase()]);
-      Object.keys(caps).forEach(function(cap) {
-        const enabled = caps[cap];
-        if (enabled) {
-          rows.push(['  ' + cap.charAt(0).toUpperCase() + cap.slice(1) + ' Component', 'Yes']);
-          
-          // Add monitoring details
-          const monKey = 'loc_' + loc + '_' + cap + '_monitoring';
-          if (data[monKey]) {
-            Object.keys(data[monKey]).forEach(function(provider) {
-              const items = data[monKey][provider];
-              if (items && items.length > 0) {
-                rows.push(['    ' + provider + ' Monitoring', items.join(', ')]);
-              }
-            });
-          }
-          
-          // Add alerting details
-          const alertKey = 'loc_' + loc + '_' + cap + '_alerting';
-          if (data[alertKey]) {
-            Object.keys(data[alertKey]).forEach(function(provider) {
-              const items = data[alertKey][provider];
-              if (items && items.length > 0) {
-                rows.push(['    ' + provider + ' Alerting', items.join(', ')]);
-              }
-            });
-          }
-          
-          // Add reporting, stip, geneos and lisi
-          const repKey = 'loc_' + loc + '_' + cap + '_reporting';
-          const stipKey = 'loc_' + loc + '_' + cap + '_stip';
-          const geneosKey = 'loc_' + loc + '_' + cap + '_geneos';
-          const lisiKey = 'loc_' + loc + '_' + cap + '_lisi';
-          rows.push(['    Reporting', data[repKey] ? 'Yes' : (data[repKey] === 'na' ? 'N/A' : 'No')]);
-          rows.push(['    Stip Integration', data[stipKey] ? 'Yes' : (data[stipKey] === 'na' ? 'N/A' : 'No')]);
-          rows.push(['    Geneos Integration', data[geneosKey] ? 'Yes' : (data[geneosKey] === 'na' ? 'N/A' : 'No')]);
-          rows.push(['    Lisi Integration', data[lisiKey] ? 'Yes' : (data[lisiKey] === 'na' ? 'N/A' : 'No')]);
-        }
-      });
-    });
-  }
-  
   // Add Other Mentions
   if (data.other_mentions && data.other_mentions.trim()) {
     rows.push([]);
@@ -1166,43 +990,6 @@ function collectAnswers() {
     const v = params.get(key);
     data[key] = v === '1' ? true : v === '0' ? false : v === 'na' ? 'na' : null;
   });
-  // locations
-  data.locations = {};
-  LOCATIONS.forEach(function(loc){
-    data.locations[loc] = {};
-    const locationProviders = getProvidersForLocation(loc);
-    CAPABILITIES.forEach(function(cap){
-      const k = 'loc_' + loc + '_' + cap;
-      const v = params.get(k);
-      data.locations[loc][cap] = v === '1' ? true : v === '0' ? false : v === 'na' ? 'na' : null;
-      data.locations[loc][cap + '_monitoring'] = {};
-      (locationProviders.monitoring||[]).forEach(function(prov){
-        const dk = 'loc_' + loc + '_' + cap + '_monitoring_' + prov;
-        const raw = params.get(dk);
-        data.locations[loc][cap + '_monitoring'][prov] = raw ? raw.split('|') : [];
-      });
-      data.locations[loc][cap + '_alerting'] = {};
-      (locationProviders.alerting||[]).forEach(function(prov){
-        const ak = 'loc_' + loc + '_' + cap + '_alerting_' + prov;
-        const raw = params.get(ak);
-        data.locations[loc][cap + '_alerting'][prov] = raw ? raw.split('|') : [];
-      });
-      ['reporting','stip','geneos','lisi'].forEach(function(simple){
-        const sk = 'loc_' + loc + '_' + cap + '_' + simple;
-        const sv = params.get(sk);
-        data.locations[loc][cap + '_' + simple] = sv === '1' ? true : sv === '0' ? false : sv === 'na' ? 'na' : null;
-        // Handle provider drill-downs for stip only
-        if (simple === 'stip') {
-          data.locations[loc][cap + '_' + simple + '_providers'] = {};
-          ['newrelic', 'splunk'].forEach(function(prov){
-            const dk = 'loc_' + loc + '_' + cap + '_' + simple + '_' + prov;
-            const raw = params.get(dk);
-            data.locations[loc][cap + '_' + simple + '_providers'][prov] = raw ? raw.split('|') : [];
-          });
-        }
-      });
-    });
-  });
   return data;
 }
 
@@ -1218,22 +1005,6 @@ function hydrateSelections(state) {
     if (val === false && pills[1]) pills[1].classList.add('selected');
     if (val === 'na' && pills[2]) pills[2].classList.add('selected');
     
-    // Update capability header color based on selection
-    if (key && key.startsWith('loc_') && (key.includes('_frontend') || key.includes('_backend') || key.includes('_apis') || key.includes('_mobile')) &&
-        !key.includes('_reporting') && !key.includes('_stip') && !key.includes('_geneos') && !key.includes('_lisi') && 
-        !key.includes('_monitoring') && !key.includes('_alerting')) {
-      const capHeader = container.closest('.cap-header');
-      if (capHeader) {
-        capHeader.classList.remove('yes', 'no', 'na');
-        if (val === true) {
-          capHeader.classList.add('yes');
-        } else if (val === false) {
-          capHeader.classList.add('no');
-        } else if (val === 'na') {
-          capHeader.classList.add('na');
-        }
-      }
-    }
   });
 
   // hydrate provider chips selection state
@@ -1251,8 +1022,6 @@ function hydrateSelections(state) {
 
 function render() {
   const state = getState();
-  // rebuild dynamic sections first
-  buildLocations();
   // build chip sets for new sections
   buildMetaChips();
   buildAgentInstrumentation();
@@ -1362,21 +1131,6 @@ function render() {
   if (otherMentionsTextarea && otherMentionsTextarea.value !== state.other_mentions) otherMentionsTextarea.value = state.other_mentions || '';
   renderProgress(state);
   updateDrillVisibility(state);
-  // highlight selected location button
-  const locSeg = document.getElementById('location_segmented');
-  if (locSeg) {
-    locSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-loc') === state.loc_selected);
-    });
-  }
-  
-  // Hide tooltip if location is selected
-  const tooltipEl = document.getElementById('location-tooltip');
-  if (tooltipEl && state.loc_selected) {
-    tooltipEl.style.display = 'none';
-  }
-  
-  renderOnboardStats(state);
 }
 
 function buildYesNoOptions() {
@@ -1443,182 +1197,6 @@ function hydrateChipSets() {
   });
 }
 
-function buildLocations() {
-  const root = document.getElementById('locations-root');
-  const tooltipEl = document.getElementById('location-tooltip');
-  const selected = new URLSearchParams(location.search).get('loc_selected');
-  const list = selected ? [selected] : [];
-  
-  // Clear everything except tooltip
-  Array.from(root.children).forEach(function(child) {
-    if (child.id !== 'location-tooltip') {
-      root.removeChild(child);
-    }
-  });
-  
-  if (!list.length) {
-    const hint = document.createElement('div');
-    hint.className = 'hint';
-    hint.textContent = 'Select a location (GCP / On-Prem / Hybrid) to continue.';
-    root.appendChild(hint);
-    return;
-  }
-  list.forEach(function(loc){
-    const locCard = document.createElement('div');
-    locCard.className = 'card';
-    const title = loc.charAt(0).toUpperCase() + loc.slice(1);
-    locCard.innerHTML = '<h3 style="margin-top:0;">' + title + '</h3>';
-    
-    // Get location-specific providers
-    const locationProviders = getProvidersForLocation(loc);
-
-    CAPABILITIES.forEach(function(cap){
-      const capWrap = document.createElement('div');
-      capWrap.className = 'question cap-header';
-      const capLabel = cap === 'apis' ? 'Exposes APIs' : (cap === 'frontend' ? 'Frontend' : (cap === 'mobile' ? 'Mobile' : 'Backend'));
-      capWrap.innerHTML = '<label>' + capLabel + '</label><div class="options" data-key="loc_' + loc + '_' + cap + '"></div>';
-
-      // drilldowns
-      const drill = document.createElement('div');
-      drill.className = 'drill';
-      drill.style.marginLeft = '8px';
-      drill.style.display = 'none';
-      drill.setAttribute('data-drill-for', 'loc_' + loc + '_' + cap);
-
-      // Monitoring
-      const mon = document.createElement('div');
-      mon.className = 'question';
-      mon.innerHTML = '<label>Monitoring</label>';
-      const monGrid = document.createElement('div');
-      monGrid.className = 'provider-grid';
-      locationProviders.monitoring.forEach(function(prov){
-        const provWrap = document.createElement('div');
-        provWrap.className = 'provider';
-        provWrap.innerHTML = '<h4>' + prettyProv(prov) + '</h4>';
-        const items = MON_ITEMS[prov];
-        const chips = document.createElement('div');
-        chips.className = 'chipset';
-        items.forEach(function(item){
-          const chip = document.createElement('span');
-          chip.className = 'pill';
-          chip.textContent = item;
-          chip.dataset.key = 'loc_' + loc + '_' + cap + '_monitoring_' + prov;
-          chip.dataset.item = item;
-          chip.addEventListener('click', function(){ toggleChip('loc_' + loc + '_' + cap + '_monitoring_' + prov, item); });
-          chips.appendChild(chip);
-        });
-        provWrap.appendChild(chips);
-        monGrid.appendChild(provWrap);
-      });
-      mon.appendChild(monGrid);
-
-      // Alerting
-      const al = document.createElement('div');
-      al.className = 'question';
-      al.innerHTML = '<label>Alerting</label>';
-      const alGrid = document.createElement('div');
-      alGrid.className = 'provider-grid';
-      locationProviders.alerting.forEach(function(prov){
-        const provWrap = document.createElement('div');
-        provWrap.className = 'provider';
-        provWrap.innerHTML = '<h4>' + prettyProv(prov) + '</h4>';
-        const items = ALERT_ITEMS[prov];
-        const chips = document.createElement('div');
-        chips.className = 'chipset';
-        items.forEach(function(item){
-          const chip = document.createElement('span');
-          chip.className = 'pill';
-          chip.textContent = item;
-          chip.dataset.key = 'loc_' + loc + '_' + cap + '_alerting_' + prov;
-          chip.dataset.item = item;
-          chip.addEventListener('click', function(){ toggleChip('loc_' + loc + '_' + cap + '_alerting_' + prov, item); });
-          chips.appendChild(chip);
-        });
-        provWrap.appendChild(chips);
-        alGrid.appendChild(provWrap);
-      });
-      al.appendChild(alGrid);
-
-      // Reporting & Stip (yes/no)
-      const rep = document.createElement('div');
-      rep.className = 'question';
-      rep.innerHTML = '<label>Reporting</label><div class="options" data-key="loc_' + loc + '_' + cap + '_reporting"></div>';
-      
-      const stip = document.createElement('div');
-      stip.className = 'question';
-      stip.innerHTML = '<label>Stip integration</label><div class="options" data-key="loc_' + loc + '_' + cap + '_stip"></div>';
-      
-      // Stip integration drill-down options
-      const stipDrill = document.createElement('div');
-      stipDrill.className = 'drill';
-      stipDrill.style.marginLeft = '8px';
-      stipDrill.style.display = 'none';
-      stipDrill.setAttribute('data-drill-for', 'loc_' + loc + '_' + cap + '_stip');
-      
-      const stipOptions = document.createElement('div');
-      stipOptions.className = 'question';
-      stipOptions.innerHTML = '<label>Stip Integration Options</label>';
-      const stipGrid = document.createElement('div');
-      stipGrid.className = 'provider-grid';
-      
-      // Add New Relic and Splunk options for Stip integration
-      ['newrelic', 'splunk'].forEach(function(prov){
-        const provWrap = document.createElement('div');
-        provWrap.className = 'provider';
-        provWrap.innerHTML = '<h4>' + prettyProv(prov) + '</h4>';
-        const chips = document.createElement('div');
-        chips.className = 'chipset';
-        
-        // Add a simple "Enabled" option for each provider
-        const chip = document.createElement('span');
-        chip.className = 'pill';
-        chip.textContent = 'Enabled';
-        chip.dataset.key = 'loc_' + loc + '_' + cap + '_stip_' + prov;
-        chip.dataset.item = 'Enabled';
-        chip.addEventListener('click', function(){ toggleChip('loc_' + loc + '_' + cap + '_stip_' + prov, 'Enabled'); });
-        chips.appendChild(chip);
-        
-        provWrap.appendChild(chips);
-        stipGrid.appendChild(provWrap);
-      });
-      
-      stipOptions.appendChild(stipGrid);
-      stipDrill.appendChild(stipOptions);
-
-      // Geneos integration (yes/no)
-      const geneos = document.createElement('div');
-      geneos.className = 'question';
-      geneos.innerHTML = '<label>Geneos Integration</label><div class="options" data-key="loc_' + loc + '_' + cap + '_geneos"></div>';
-
-      // Lisi integration (yes/no)
-      const lisi = document.createElement('div');
-      lisi.className = 'question';
-      lisi.innerHTML = '<label>Lisi Integration</label><div class="options" data-key="loc_' + loc + '_' + cap + '_lisi"></div>';
-
-      // Create horizontal container for Stip, Geneos, and Lisi integrations
-      const integrationsRow = document.createElement('div');
-      integrationsRow.className = 'integrations-row';
-      integrationsRow.appendChild(stip);
-      integrationsRow.appendChild(geneos);
-      integrationsRow.appendChild(lisi);
-
-      drill.appendChild(mon);
-      drill.appendChild(al);
-      drill.appendChild(rep);
-      drill.appendChild(integrationsRow);
-      drill.appendChild(stipDrill);
-
-      locCard.appendChild(capWrap);
-      locCard.appendChild(drill);
-    });
-
-    root.appendChild(locCard);
-  });
-
-  // create yes/no for all generated options
-  buildYesNoOptions();
-}
-
 function toggleChip(key, item) {
   const params = new URLSearchParams(location.search);
   const raw = params.get(key) || '';
@@ -1644,26 +1222,6 @@ function toggleChip(key, item) {
   }
   
   render();
-  
-  // Update capability header color immediately if this is a capability selection
-  if (key && key.startsWith('loc_') && (key.includes('_frontend') || key.includes('_backend') || key.includes('_apis') || key.includes('_mobile')) &&
-      !key.includes('_reporting') && !key.includes('_stip') && !key.includes('_geneos') && !key.includes('_lisi') && 
-      !key.includes('_monitoring') && !key.includes('_alerting')) {
-    const container = document.querySelector('.options[data-key="' + key + '"]');
-    if (container) {
-      const capHeader = container.closest('.cap-header');
-      if (capHeader) {
-        capHeader.classList.remove('yes', 'no', 'na');
-        if (value === true) {
-          capHeader.classList.add('yes');
-        } else if (value === false) {
-          capHeader.classList.add('no');
-        } else if (value === 'na') {
-          capHeader.classList.add('na');
-        }
-      }
-    }
-  }
 }
 
 // Helper function to build chip sets
@@ -1699,25 +1257,18 @@ function buildChipSet(containerId, key, options) {
   }
 }
 
-function prettyProv(k){ 
-  if (k === 'newrelic') return 'New Relic';
-  if (k === 'cloud-monitoring') return 'Cloud Monitoring-Logging';
-  return 'Splunk';
-}
-
 function renderProgress(state) {
   // Count all questions that are visible/required
   let total = 0;
   let answered = 0;
   
   // Required metadata fields (always count)
-  total += 6; // Application name, Role, NAR-ID, Contact Email, Application Type, and Location
+  total += 5; // Application name, Role, NAR-ID, Contact Email, Language
   if (state.app_name && state.app_name.trim()) answered += 1;
   if (state.role && state.role.trim()) answered += 1;
   if (state.nar_id && state.nar_id.trim()) answered += 1;
   if (state.contact_email && state.contact_email.trim()) answered += 1;
   if (state.app_type && state.app_type.length > 0) answered += 1;
-  if (state.loc_selected) answered += 1;
   
   // All YESNO_KEYS questions (always count)
   total += YESNO_KEYS.length;
@@ -1741,32 +1292,6 @@ function renderProgress(state) {
     answered += 3;
   }
   
-  // Location questions (always count if location is selected)
-  if (state.loc_selected) {
-    CAPABILITIES.forEach(function(cap){
-      total += 1; // capability yes/no
-      const v = state.locations && state.locations[state.loc_selected] && state.locations[state.loc_selected][cap];
-      if (v===true||v===false||v==='na') answered += 1;
-      
-      // Sub-questions always count in total
-      total += 4; // reporting, stip, geneos and lisi
-      if (v === true) {
-        // When capability is YES, count the actual answers to sub-questions
-        ['reporting','stip','geneos','lisi'].forEach(function(simple){
-          const key = 'loc_' + state.loc_selected + '_' + cap + '_' + simple;
-          const sv = state[key];
-          if (sv===true||sv===false||sv==='na') answered += 1;
-        });
-      } else if (v === false || v === 'na') {
-        // When capability is NO or N/A, sub-questions are auto-set to N/A and count as answered
-        answered += 4;
-      }
-      
-      // Monitoring and alerting items are NOT counted towards completion
-      // Only Reporting, Stip, Geneos and Lisi integration questions count (handled above)
-      // The individual monitoring/alerting items are optional and don't affect progress
-    });
-  }
   const pct = Math.round((answered / total) * 100);
   const bar = document.getElementById('progress-bar-fill');
   const label = document.getElementById('progress-label');
@@ -1780,24 +1305,7 @@ function renderProgress(state) {
 function updateDrillVisibility(state) {
   document.querySelectorAll('[data-drill-for]').forEach(function(el){
     const key = el.getAttribute('data-drill-for');
-    let enabled = false;
-    if (key.indexOf('loc_') === 0) {
-      const parts = key.split('_');
-      const loc = parts[1];
-      const cap = parts[2];
-      
-      // Check if this is a Stip integration drill-down
-      if (parts.length >= 4 && parts[3] === 'stip') {
-        // Show integration options when integration is Yes
-        const integrationKey = 'loc_' + loc + '_' + cap + '_stip';
-        enabled = state[integrationKey] === true;
-      } else {
-        // Regular capability drill-down
-        enabled = state.locations && state.locations[loc] && state.locations[loc][cap] === true;
-      }
-    } else {
-      enabled = state[key] === true;
-    }
+    const enabled = state[key] === true;
     // For slo-sub-questions, use flex display; for others, use block or empty string
     if (el.classList.contains('slo-sub-questions')) {
       el.style.display = enabled ? 'flex' : 'none';
@@ -1806,108 +1314,6 @@ function updateDrillVisibility(state) {
     }
   });
 }
-
-function renderOnboardStats(state) {
-  const loc = state.loc_selected;
-  const out = {
-    frontend: '—', backend: '—', apis: '—', mobile: '—',
-    frontendMon: '—', frontendAl: '—',
-    backendMon: '—', backendAl: '—',
-    apisMon: '—', apisAl: '—',
-    mobileMon: '—', mobileAl: '—'
-  };
-  if (!loc) {
-    updateOnboardUI(out);
-    return;
-  }
-  const locationProviders = getProvidersForLocation(loc);
-  CAPABILITIES.forEach(function(cap){
-    if (state.locations && state.locations[loc] && state.locations[loc][cap] !== true) {
-      out[cap] = '—';
-      out[cap + 'Mon'] = '—';
-      out[cap + 'Al'] = '—';
-      return;
-    }
-    // count selected items across monitoring/alerting providers
-    let selected = 0; let total = 0;
-    // per-category counters
-    let selMon = 0, totMon = 0, selAl = 0, totAl = 0;
-    // Monitoring
-    (locationProviders.monitoring||[]).forEach(function(prov){
-      const key = 'loc_' + loc + '_' + cap + '_monitoring_' + prov;
-      const items = state[key] || [];
-      const all = MON_ITEMS[prov] || [];
-      
-      // Count all available items and selected items
-      selected += items.length; 
-      total += all.length;
-      selMon += items.length; 
-      totMon += all.length;
-    });
-    // Alerting
-    (locationProviders.alerting||[]).forEach(function(prov){
-      const key = 'loc_' + loc + '_' + cap + '_alerting_' + prov;
-      const items = state[key] || [];
-      const all = ALERT_ITEMS[prov] || [];
-      
-      // Count all available items and selected items
-      selected += items.length; 
-      total += all.length;
-      selAl += items.length; 
-      totAl += all.length;
-    });
-    // Reporting/Stip/Geneos/Lisi as binary yes/no, exclude N/A from denominator
-    ['reporting','stip','geneos','lisi'].forEach(function(simple){
-      const v = state['loc_' + loc + '_' + cap + '_' + simple];
-      if (v === true) { selected += 1; total += 1; }
-      else if (v === false) { total += 1; }
-    });
-    out[cap] = total ? Math.round((selected/total)*100) + '%' : '—';
-    out[cap + 'Mon'] = totMon ? Math.round((selMon/totMon)*100) + '%' : '—';
-    out[cap + 'Al'] = totAl ? Math.round((selAl/totAl)*100) + '%' : '—';
-  });
-  updateOnboardUI(out);
-}
-
-function updateOnboardUI(out) {
-  const fe = document.getElementById('onboard-frontend');
-  const feM = document.getElementById('onboard-frontend-mon');
-  const feA = document.getElementById('onboard-frontend-al');
-  const be = document.getElementById('onboard-backend');
-  const beM = document.getElementById('onboard-backend-mon');
-  const beA = document.getElementById('onboard-backend-al');
-  const ap = document.getElementById('onboard-apis');
-  const apM = document.getElementById('onboard-apis-mon');
-  const apA = document.getElementById('onboard-apis-al');
-  const mo = document.getElementById('onboard-mobile');
-  const moM = document.getElementById('onboard-mobile-mon');
-  const moA = document.getElementById('onboard-mobile-al');
-  applyStat(fe, 'Frontend onboard: ' + out.frontend, out.frontend);
-  applyStat(feM, 'Monitor: ' + out.frontendMon, out.frontendMon);
-  applyStat(feA, 'Alert: ' + out.frontendAl, out.frontendAl);
-  applyStat(be, 'Backend onboard: ' + out.backend, out.backend);
-  applyStat(beM, 'Monitor: ' + out.backendMon, out.backendMon);
-  applyStat(beA, 'Alert: ' + out.backendAl, out.backendAl);
-  applyStat(ap, 'APIs onboard: ' + out.apis, out.apis);
-  applyStat(apM, 'Monitor: ' + out.apisMon, out.apisMon);
-  applyStat(apA, 'Alert: ' + out.apisAl, out.apisAl);
-  applyStat(mo, 'Mobile onboard: ' + out.mobile, out.mobile);
-  applyStat(moM, 'Monitor: ' + out.mobileMon, out.mobileMon);
-  applyStat(moA, 'Alert: ' + out.mobileAl, out.mobileAl);
-}
-
-function applyStat(el, text, pctText) {
-  if (!el) return;
-  el.textContent = text;
-  el.classList.remove('stat-green','stat-orange','stat-red');
-  const pct = parseInt(String(pctText).replace('%',''), 10);
-  if (isNaN(pct)) return;
-  if (pct >= 80) el.classList.add('stat-green');
-  else if (pct < 20) el.classList.add('stat-red');
-  else el.classList.add('stat-orange');
-}
-
-
 
 // Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', function() {
@@ -1964,36 +1370,6 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('slo_cujs_link').addEventListener('input', function(e){ setAnswer('slo_cujs_link', e.target.value); });
   document.getElementById('slo_hla_link').addEventListener('input', function(e){ setAnswer('slo_hla_link', e.target.value); });
   document.getElementById('other_mentions').addEventListener('input', function(e){ setAnswer('other_mentions', e.target.value); });
-
-  // initial render builds everything
-  // location segmented
-  const locSeg = document.getElementById('location_segmented');
-  const tooltipEl = document.getElementById('location-tooltip');
-  
-  if (locSeg) {
-    locSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const val = btn.getAttribute('data-loc');
-        setAnswer('loc_selected', val);
-        // render() will rebuild and highlight
-      });
-      
-      // Add hover events for tooltips
-      btn.addEventListener('mouseenter', function(){
-        const tooltipText = btn.getAttribute('data-tooltip');
-        if (tooltipText && tooltipEl) {
-          tooltipEl.textContent = tooltipText;
-          tooltipEl.style.display = 'block';
-        }
-      });
-      
-      btn.addEventListener('mouseleave', function(){
-        if (tooltipEl) {
-          tooltipEl.style.display = 'none';
-        }
-      });
-    });
-  }
 
   document.getElementById('submit').addEventListener('click', generateAndSendCSV);
   document.getElementById('reset').addEventListener('click', resetAll);
