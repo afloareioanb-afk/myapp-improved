@@ -166,66 +166,35 @@
           </div>
             <div class="field">
               <label>Application Type</label>
-              <div class="segmented" id="application_type_segmented">
-                <button type="button" data-apptype="webserver">Web Server</button>
-                <button type="button" data-apptype="api">API</button>
-                <button type="button" data-apptype="microservice">Microservice</button>
-                <button type="button" data-apptype="batch">Batch</button>
-                <button type="button" data-apptype="eventdriven">Event-driven</button>
-                <button type="button" data-apptype="other">Other</button>
-              </div>
+              <div class="chipset" id="application_type_chips"></div>
               <div class="field" id="application_type_extra_wrap" style="display:none;margin-top:8px;">
                 <input id="application_type_extra" name="application_type_extra" type="text" placeholder="Additional information (optional)" autocomplete="off" />
               </div>
             </div>
             <div class="field">
               <label>Language</label>
-              <div class="segmented" id="app_type_segmented">
-                <button type="button" data-type="java">Java</button>
-                <button type="button" data-type="nodejs">Node.js</button>
-                <button type="button" data-type="python">Python</button>
-                <button type="button" data-type="other">Other</button>
-              </div>
+              <div class="chipset" id="app_type_chips"></div>
               <div class="field" id="app_type_other_wrap" style="display:none;margin-top:8px;">
                 <input id="app_type_other" name="app_type_other" type="text" placeholder="Specify other language" autocomplete="off" />
               </div>
             </div>
             <div class="field">
               <label>Database</label>
-              <div class="segmented" id="database_segmented">
-                <button type="button" data-db="spanner">Spanner</button>
-                <button type="button" data-db="cloudsql">CloudSQL(Postgres, SQLServer)</button>
-                <button type="button" data-db="oracle">Oracle</button>
-                <button type="button" data-db="sqlserver">SQLServer</button>
-                <button type="button" data-db="bigquery">BigQuery</button>
-                <button type="button" data-db="postgresql">PostgreSQL</button>
-                <button type="button" data-db="mongodb">MongoDB</button>
-                <button type="button" data-db="redis">Redis</button>
-                <button type="button" data-db="other">Other</button>
-              </div>
+              <div class="chipset" id="database_chips"></div>
               <div class="field" id="database_other_wrap" style="display:none;margin-top:8px;">
                 <input id="database_other" name="database_other" type="text" placeholder="Specify other database" autocomplete="off" />
               </div>
             </div>
             <div class="field">
               <label>Messaging</label>
-              <div class="segmented" id="messaging_segmented">
-                <button type="button" data-msg="ibmmq">IBM MQ</button>
-                <button type="button" data-msg="kafka">Kafka</button>
-                <button type="button" data-msg="other">Other</button>
-              </div>
+              <div class="chipset" id="messaging_chips"></div>
               <div class="field" id="messaging_other_wrap" style="display:none;margin-top:8px;">
                 <input id="messaging_other" name="messaging_other" type="text" placeholder="Specify other messaging" autocomplete="off" />
               </div>
             </div>
             <div class="field">
               <label>Batch</label>
-              <div class="segmented" id="batch_segmented">
-                <button type="button" data-batch="automic">Automic/UC4</button>
-                <button type="button" data-batch="controlm">Control-M</button>
-                <button type="button" data-batch="gcpbatch">GCP Batch</button>
-                <button type="button" data-batch="other">Other</button>
-              </div>
+              <div class="chipset" id="batch_chips"></div>
               <div class="field" id="batch_other_wrap" style="display:none;margin-top:8px;">
                 <input id="batch_other" name="batch_other" type="text" placeholder="Specify other batch" autocomplete="off" />
               </div>

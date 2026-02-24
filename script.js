@@ -82,6 +82,13 @@ const ALERTING_PCP_OPTIONS = ["automated Incident", "automated callout", "Teams"
 
 // Additional SLI/SLO options
 const SLO_ADDITIONAL_OPTIONS = ["Throughput", "Data processing services: correctness", "Data processing services: freshness", "Other"];
+
+// Metadata multiselect options
+const APPLICATION_TYPE_OPTIONS = ["Web Server", "API", "Microservice", "Batch", "Event-driven", "Other"];
+const LANGUAGE_OPTIONS = ["Java", "Node.js", "Python", "Other"];
+const DATABASE_OPTIONS = ["Spanner", "CloudSQL(Postgres, SQLServer)", "Oracle", "SQLServer", "BigQuery", "PostgreSQL", "MongoDB", "Redis", "Other"];
+const MESSAGING_OPTIONS = ["IBM MQ", "Kafka", "Other"];
+const BATCH_OPTIONS = ["Automic/UC4", "Control-M", "GCP Batch", "Other"];
 const YESNO_KEYS = [
   // SLO/SLA
   "slo_exists", "slo_pdm", "slo_error_budget_calc", "slo_cujs", "slo_hla",
@@ -220,15 +227,15 @@ function getState() {
   state.role_other = secureGet('role_other');
   state.nar_id = secureGet('nar_id');
   state.contact_email = secureGet('contact_email');
-  state.application_type = params.get('application_type') || '';
+  state.application_type = params.get('application_type') ? params.get('application_type').split('|') : [];
   state.application_type_extra = params.get('application_type_extra') || '';
-  state.app_type = params.get('app_type') || '';
+  state.app_type = params.get('app_type') ? params.get('app_type').split('|') : [];
   state.app_type_other = params.get('app_type_other') || '';
-  state.database = params.get('database') || '';
+  state.database = params.get('database') ? params.get('database').split('|') : [];
   state.database_other = params.get('database_other') || '';
-  state.messaging = params.get('messaging') || '';
+  state.messaging = params.get('messaging') ? params.get('messaging').split('|') : [];
   state.messaging_other = params.get('messaging_other') || '';
-  state.batch = params.get('batch') || '';
+  state.batch = params.get('batch') ? params.get('batch').split('|') : [];
   state.batch_other = params.get('batch_other') || '';
   // Agent Instrumentation
   state.agent_frontend = params.get('agent_frontend') ? params.get('agent_frontend').split('|') : [];
@@ -504,7 +511,7 @@ function getIncompleteItems(state) {
   } else if (!state.contact_email.endsWith('@db.com')) {
     incomplete.push('Contact Email (must end with @db.com)');
   }
-  if (!state.app_type) {
+  if (!state.app_type || state.app_type.length === 0) {
     incomplete.push('Language');
   }
   if (!state.loc_selected) {
@@ -634,11 +641,11 @@ Assessment Summary:
 - Role: ${state.role || 'Not specified'}${state.role === 'other' && state.role_other ? ' (' + state.role_other + ')' : ''}
 - NAR-ID: ${state.nar_id || 'Not specified'}
 - Contact Email: ${state.contact_email || 'Not specified'}
-- Application Type: ${state.application_type || 'Not specified'}${state.application_type_extra ? ' (' + state.application_type_extra + ')' : ''}
-- Language: ${state.app_type || 'Not specified'}${state.app_type === 'other' && state.app_type_other ? ' (' + state.app_type_other + ')' : ''}
-- Database: ${state.database || 'Not specified'}${state.database === 'other' && state.database_other ? ' (' + state.database_other + ')' : ''}
-- Messaging: ${state.messaging || 'Not specified'}${state.messaging === 'other' && state.messaging_other ? ' (' + state.messaging_other + ')' : ''}
-- Batch: ${state.batch || 'Not specified'}${state.batch === 'other' && state.batch_other ? ' (' + state.batch_other + ')' : ''}
+- Application Type: ${state.application_type && state.application_type.length ? state.application_type.join(', ') : 'Not specified'}${state.application_type_extra ? ' (' + state.application_type_extra + ')' : ''}
+- Language: ${state.app_type && state.app_type.length ? state.app_type.join(', ') : 'Not specified'}${(state.app_type || []).indexOf('Other') >= 0 && state.app_type_other ? ' (' + state.app_type_other + ')' : ''}
+- Database: ${state.database && state.database.length ? state.database.join(', ') : 'Not specified'}${(state.database || []).indexOf('Other') >= 0 && state.database_other ? ' (' + state.database_other + ')' : ''}
+- Messaging: ${state.messaging && state.messaging.length ? state.messaging.join(', ') : 'Not specified'}${(state.messaging || []).indexOf('Other') >= 0 && state.messaging_other ? ' (' + state.messaging_other + ')' : ''}
+- Batch: ${state.batch && state.batch.length ? state.batch.join(', ') : 'Not specified'}${(state.batch || []).indexOf('Other') >= 0 && state.batch_other ? ' (' + state.batch_other + ')' : ''}
 - Location: ${state.loc_selected || 'Not specified'}
 - Critical User Journeys: ${state.slo_cujs ? 'Yes' : (state.slo_cujs === 'na' ? 'N/A' : 'No')}
 - High-Level Architecture: ${state.slo_hla ? 'Yes' : (state.slo_hla === 'na' ? 'N/A' : 'No')}
@@ -714,55 +721,25 @@ function resetAll() {
   const roleOtherWrap = document.getElementById('role_other_wrap');
   if (roleOtherWrap) roleOtherWrap.style.display = 'none';
   
-  // Reset application type selection
-  const appTypeSeg = document.getElementById('application_type_segmented');
-  if (appTypeSeg) {
-    appTypeSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-    const applicationTypeExtraWrap = document.getElementById('application_type_extra_wrap');
-    if (applicationTypeExtraWrap) applicationTypeExtraWrap.style.display = 'none';
-  }
-  
-  // Reset language (app_type) selection
-  const typeSeg = document.getElementById('app_type_segmented');
-  if (typeSeg) {
-    typeSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-    const appTypeOtherWrap = document.getElementById('app_type_other_wrap');
-    if (appTypeOtherWrap) appTypeOtherWrap.style.display = 'none';
-  }
-  
-  // Reset database selection
-  const dbSeg = document.getElementById('database_segmented');
-  if (dbSeg) {
-    dbSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-    const dbOtherWrap = document.getElementById('database_other_wrap');
-    if (dbOtherWrap) dbOtherWrap.style.display = 'none';
-  }
-  
-  // Reset messaging selection
-  const msgSeg = document.getElementById('messaging_segmented');
-  if (msgSeg) {
-    msgSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-    const msgOtherWrap = document.getElementById('messaging_other_wrap');
-    if (msgOtherWrap) msgOtherWrap.style.display = 'none';
-  }
-  
-  // Reset batch selection
-  const batchSeg = document.getElementById('batch_segmented');
-  if (batchSeg) {
-    batchSeg.querySelectorAll('button').forEach(function(btn) {
-      btn.classList.remove('active');
-    });
-    const batchOtherWrap = document.getElementById('batch_other_wrap');
-    if (batchOtherWrap) batchOtherWrap.style.display = 'none';
-  }
+  // Reset meta chip selections
+  ['application_type_chips', 'app_type_chips', 'database_chips', 'messaging_chips', 'batch_chips'].forEach(function(containerId) {
+    const chips = document.getElementById(containerId);
+    if (chips) {
+      chips.querySelectorAll('.pill').forEach(function(chip) {
+        chip.classList.remove('selected');
+      });
+    }
+  });
+  const applicationTypeExtraWrap = document.getElementById('application_type_extra_wrap');
+  if (applicationTypeExtraWrap) applicationTypeExtraWrap.style.display = 'none';
+  const appTypeOtherWrap = document.getElementById('app_type_other_wrap');
+  if (appTypeOtherWrap) appTypeOtherWrap.style.display = 'none';
+  const dbOtherWrap = document.getElementById('database_other_wrap');
+  if (dbOtherWrap) dbOtherWrap.style.display = 'none';
+  const msgOtherWrap = document.getElementById('messaging_other_wrap');
+  if (msgOtherWrap) msgOtherWrap.style.display = 'none';
+  const batchOtherWrap = document.getElementById('batch_other_wrap');
+  if (batchOtherWrap) batchOtherWrap.style.display = 'none';
   
   // Reset agent instrumentation chip sets
   Object.keys(AGENT_OPTIONS).forEach(function(type) {
@@ -946,24 +923,24 @@ function convertToCSV(data) {
   }
   rows.push(['NAR-ID', data.nar_id || '']);
   rows.push(['Contact Email', data.contact_email || '']);
-  rows.push(['Application Type', data.application_type || '']);
+  rows.push(['Application Type', (data.application_type || []).join(', ') || '']);
   if (data.application_type_extra) {
     rows.push(['Application Type (Extra Info)', data.application_type_extra || '']);
   }
-  rows.push(['Language', data.app_type || '']);
-  if (data.app_type === 'other') {
+  rows.push(['Language', (data.app_type || []).join(', ') || '']);
+  if ((data.app_type || []).indexOf('Other') >= 0) {
     rows.push(['Language (Other)', data.app_type_other || '']);
   }
-  rows.push(['Database', data.database || '']);
-  if (data.database === 'other') {
+  rows.push(['Database', (data.database || []).join(', ') || '']);
+  if ((data.database || []).indexOf('Other') >= 0) {
     rows.push(['Database (Other)', data.database_other || '']);
   }
-  rows.push(['Messaging', data.messaging || '']);
-  if (data.messaging === 'other') {
+  rows.push(['Messaging', (data.messaging || []).join(', ') || '']);
+  if ((data.messaging || []).indexOf('Other') >= 0) {
     rows.push(['Messaging (Other)', data.messaging_other || '']);
   }
-  rows.push(['Batch', data.batch || '']);
-  if (data.batch === 'other') {
+  rows.push(['Batch', (data.batch || []).join(', ') || '']);
+  if ((data.batch || []).indexOf('Other') >= 0) {
     rows.push(['Batch (Other)', data.batch_other || '']);
   }
   rows.push([]);
@@ -1126,15 +1103,15 @@ function collectAnswers() {
   data.role_other = secureGet('role_other') || '';
   data.nar_id = secureGet('nar_id') || '';
   data.contact_email = secureGet('contact_email') || '';
-  data.application_type = params.get('application_type') || '';
+  data.application_type = params.get('application_type') ? params.get('application_type').split('|') : [];
   data.application_type_extra = params.get('application_type_extra') || '';
-  data.app_type = params.get('app_type') || '';
+  data.app_type = params.get('app_type') ? params.get('app_type').split('|') : [];
   data.app_type_other = params.get('app_type_other') || '';
-  data.database = params.get('database') || '';
+  data.database = params.get('database') ? params.get('database').split('|') : [];
   data.database_other = params.get('database_other') || '';
-  data.messaging = params.get('messaging') || '';
+  data.messaging = params.get('messaging') ? params.get('messaging').split('|') : [];
   data.messaging_other = params.get('messaging_other') || '';
-  data.batch = params.get('batch') || '';
+  data.batch = params.get('batch') ? params.get('batch').split('|') : [];
   data.batch_other = params.get('batch_other') || '';
   // Agent Instrumentation
   data.agent_frontend = params.get('agent_frontend') ? params.get('agent_frontend').split('|') : [];
@@ -1277,6 +1254,7 @@ function render() {
   // rebuild dynamic sections first
   buildLocations();
   // build chip sets for new sections
+  buildMetaChips();
   buildAgentInstrumentation();
   buildSLOMonitoring();
   buildLogging();
@@ -1304,59 +1282,25 @@ function render() {
   if (roleOtherInput && roleOtherInput.value !== state.role_other) roleOtherInput.value = state.role_other || '';
   if (narIdInput && narIdInput.value !== state.nar_id) narIdInput.value = state.nar_id || '';
   if (contactEmailInput && contactEmailInput.value !== state.contact_email) contactEmailInput.value = state.contact_email || '';
-  // Hydrate application type
-  const appTypeSeg = document.getElementById('application_type_segmented');
-  if (appTypeSeg) {
-    appTypeSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-apptype') === state.application_type);
-    });
-    const appTypeExtraWrap = document.getElementById('application_type_extra_wrap');
-    const appTypeExtraInput = document.getElementById('application_type_extra');
-    if (appTypeExtraWrap) appTypeExtraWrap.style.display = state.application_type ? '' : 'none';
-    if (appTypeExtraInput && appTypeExtraInput.value !== state.application_type_extra) appTypeExtraInput.value = state.application_type_extra || '';
-  }
-  // Hydrate language (app_type)
-  const langSeg = document.getElementById('app_type_segmented');
-  if (langSeg) {
-    langSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-type') === state.app_type);
-    });
-    const langOtherWrap = document.getElementById('app_type_other_wrap');
-    if (langOtherWrap) langOtherWrap.style.display = state.app_type === 'other' ? '' : 'none';
-  }
-  // Hydrate database
-  const dbSeg = document.getElementById('database_segmented');
-  if (dbSeg) {
-    dbSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-db') === state.database);
-    });
-    const dbOtherWrap = document.getElementById('database_other_wrap');
-    const dbOtherInput = document.getElementById('database_other');
-    if (dbOtherWrap) dbOtherWrap.style.display = state.database === 'other' ? '' : 'none';
-    if (dbOtherInput && dbOtherInput.value !== state.database_other) dbOtherInput.value = state.database_other || '';
-  }
-  // Hydrate messaging
-  const msgSeg = document.getElementById('messaging_segmented');
-  if (msgSeg) {
-    msgSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-msg') === state.messaging);
-    });
-    const msgOtherWrap = document.getElementById('messaging_other_wrap');
-    const msgOtherInput = document.getElementById('messaging_other');
-    if (msgOtherWrap) msgOtherWrap.style.display = state.messaging === 'other' ? '' : 'none';
-    if (msgOtherInput && msgOtherInput.value !== state.messaging_other) msgOtherInput.value = state.messaging_other || '';
-  }
-  // Hydrate batch
-  const batchSeg = document.getElementById('batch_segmented');
-  if (batchSeg) {
-    batchSeg.querySelectorAll('button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-batch') === state.batch);
-    });
-    const batchOtherWrap = document.getElementById('batch_other_wrap');
-    const batchOtherInput = document.getElementById('batch_other');
-    if (batchOtherWrap) batchOtherWrap.style.display = state.batch === 'other' ? '' : 'none';
-    if (batchOtherInput && batchOtherInput.value !== state.batch_other) batchOtherInput.value = state.batch_other || '';
-  }
+  // Hydrate meta chip "Other" wrap visibility and inputs
+  const appTypeExtraWrap = document.getElementById('application_type_extra_wrap');
+  const appTypeExtraInput = document.getElementById('application_type_extra');
+  if (appTypeExtraWrap) appTypeExtraWrap.style.display = (state.application_type || []).indexOf('Other') >= 0 ? '' : 'none';
+  if (appTypeExtraInput && appTypeExtraInput.value !== state.application_type_extra) appTypeExtraInput.value = state.application_type_extra || '';
+  const appTypeOtherWrap = document.getElementById('app_type_other_wrap');
+  if (appTypeOtherWrap) appTypeOtherWrap.style.display = (state.app_type || []).indexOf('Other') >= 0 ? '' : 'none';
+  const dbOtherWrap = document.getElementById('database_other_wrap');
+  const dbOtherInput = document.getElementById('database_other');
+  if (dbOtherWrap) dbOtherWrap.style.display = (state.database || []).indexOf('Other') >= 0 ? '' : 'none';
+  if (dbOtherInput && dbOtherInput.value !== state.database_other) dbOtherInput.value = state.database_other || '';
+  const msgOtherWrap = document.getElementById('messaging_other_wrap');
+  const msgOtherInput = document.getElementById('messaging_other');
+  if (msgOtherWrap) msgOtherWrap.style.display = (state.messaging || []).indexOf('Other') >= 0 ? '' : 'none';
+  if (msgOtherInput && msgOtherInput.value !== state.messaging_other) msgOtherInput.value = state.messaging_other || '';
+  const batchOtherWrap = document.getElementById('batch_other_wrap');
+  const batchOtherInput = document.getElementById('batch_other');
+  if (batchOtherWrap) batchOtherWrap.style.display = (state.batch || []).indexOf('Other') >= 0 ? '' : 'none';
+  if (batchOtherInput && batchOtherInput.value !== state.batch_other) batchOtherInput.value = state.batch_other || '';
   // Hydrate agent instrumentation other inputs
   const agentOtherInputs = ['agent_frontend_other', 'agent_mobile_other', 'agent_service_other', 'agent_infrastructure_other', 'agent_database_other', 'agent_messaging_other', 'agent_other_components'];
   agentOtherInputs.forEach(function(inputId) {
@@ -1475,6 +1419,14 @@ function buildAlerting() {
 
 function buildSLOAdditional() {
   buildChipSet('slo_additional_chips', 'slo_additional', SLO_ADDITIONAL_OPTIONS);
+}
+
+function buildMetaChips() {
+  buildChipSet('application_type_chips', 'application_type', APPLICATION_TYPE_OPTIONS);
+  buildChipSet('app_type_chips', 'app_type', LANGUAGE_OPTIONS);
+  buildChipSet('database_chips', 'database', DATABASE_OPTIONS);
+  buildChipSet('messaging_chips', 'messaging', MESSAGING_OPTIONS);
+  buildChipSet('batch_chips', 'batch', BATCH_OPTIONS);
 }
 
 // Hydrate chip sets (called after building)
@@ -1684,7 +1636,7 @@ function toggleChip(key, item) {
   
   // Show/hide "Other" input field
   if (item === 'Other') {
-    const otherWrapId = key + '_other_wrap';
+    const otherWrapId = (key === 'application_type' ? key + '_extra_wrap' : key + '_other_wrap');
     const otherWrap = document.getElementById(otherWrapId);
     if (otherWrap) {
       otherWrap.style.display = list.indexOf('Other') >= 0 ? '' : 'none';
@@ -1740,7 +1692,7 @@ function buildChipSet(containerId, key, options) {
   });
   
   // Show/hide "Other" input
-  const otherWrapId = containerId.replace(/_chips$/, '_other_wrap');
+  const otherWrapId = (key === 'application_type' ? 'application_type_extra_wrap' : containerId.replace(/_chips$/, '_other_wrap'));
   const otherWrap = document.getElementById(otherWrapId);
   if (otherWrap) {
     otherWrap.style.display = selected.indexOf('Other') >= 0 ? '' : 'none';
@@ -1764,7 +1716,7 @@ function renderProgress(state) {
   if (state.role && state.role.trim()) answered += 1;
   if (state.nar_id && state.nar_id.trim()) answered += 1;
   if (state.contact_email && state.contact_email.trim()) answered += 1;
-  if (state.app_type) answered += 1;
+  if (state.app_type && state.app_type.length > 0) answered += 1;
   if (state.loc_selected) answered += 1;
   
   // All YESNO_KEYS questions (always count)
@@ -1959,67 +1911,6 @@ function applyStat(el, text, pctText) {
 
 // Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', function() {
-  // build application type inputs
-  const appTypeSeg = document.getElementById('application_type_segmented');
-  if (appTypeSeg) {
-    appTypeSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const selected = btn.getAttribute('data-apptype');
-        setAnswer('application_type', selected);
-        const appTypeExtraWrap = document.getElementById('application_type_extra_wrap');
-        if (appTypeExtraWrap) appTypeExtraWrap.style.display = selected ? '' : 'none';
-        appTypeSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      });
-    });
-  }
-  // build language (app_type) inputs
-  const typeSeg = document.getElementById('app_type_segmented');
-  if (typeSeg) {
-    typeSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const selected = btn.getAttribute('data-type');
-        setAnswer('app_type', selected);
-        document.getElementById('app_type_other_wrap').style.display = selected === 'other' ? '' : 'none';
-        typeSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      });
-    });
-  }
-  // build database inputs
-  const dbSeg = document.getElementById('database_segmented');
-  if (dbSeg) {
-    dbSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const selected = btn.getAttribute('data-db');
-        setAnswer('database', selected);
-        document.getElementById('database_other_wrap').style.display = selected === 'other' ? '' : 'none';
-        dbSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      });
-    });
-  }
-  // build messaging inputs
-  const msgSeg = document.getElementById('messaging_segmented');
-  if (msgSeg) {
-    msgSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const selected = btn.getAttribute('data-msg');
-        setAnswer('messaging', selected);
-        document.getElementById('messaging_other_wrap').style.display = selected === 'other' ? '' : 'none';
-        msgSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      });
-    });
-  }
-  // build batch inputs
-  const batchSeg = document.getElementById('batch_segmented');
-  if (batchSeg) {
-    batchSeg.querySelectorAll('button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const selected = btn.getAttribute('data-batch');
-        setAnswer('batch', selected);
-        document.getElementById('batch_other_wrap').style.display = selected === 'other' ? '' : 'none';
-        batchSeg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      });
-    });
-  }
   document.getElementById('app_name').addEventListener('input', function(e){ setAnswer('app_name', e.target.value); });
   document.getElementById('role').addEventListener('change', function(e){ 
     setAnswer('role', e.target.value);
